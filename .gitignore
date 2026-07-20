@@ -1,0 +1,33 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# build
+.next
+out
+dist
+build
+
+# env
+.env
+.env.local
+.env.*.local
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# misc
+.DS_Store
+*.pem
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# documentation — always track in git (do NOT ignore docs/)
+!docs/
+!docs/**

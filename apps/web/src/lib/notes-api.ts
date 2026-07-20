@@ -1,0 +1,177 @@
+export type ArticleStatus =
+  | "DRAFT"
+  | "SUBMITTED"
+  | "CHANGES_REQUESTED"
+  | "PUBLISHED"
+  | "REJECTED";
+
+export type AuthorSummary = {
+  id: string;
+  name: string | null;
+  email: string;
+  linkedinUrl: string | null;
+};
+
+export type AvailableTopic = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  status: string;
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+  claimedBy: { id: string; name: string | null } | null;
+};
+
+export type MyArticle = {
+  id: string;
+  title: string;
+  slug: string;
+  status: ArticleStatus;
+  reviewComment: string | null;
+  updatedAt: string;
+  submittedAt: string | null;
+  publishedAt: string | null;
+  topic: {
+    id: string;
+    name: string;
+    slug: string;
+    category: { name: string; slug: string };
+  };
+};
+
+export type ReviewArticle = {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  status: ArticleStatus;
+  submittedAt: string | null;
+  author: AuthorSummary | null;
+  topic: {
+    name: string;
+    slug: string;
+    category: { name: string; slug: string };
+  };
+};
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public details?: unknown,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+async function notesRequest<T>(
+  path: string,
+  options: { method?: string; body?: unknown } = {},
+): Promise<T> {
+  const { method = "GET", body } = options;
+
+  const response = await fetch(`/api/notes${path}`, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message =
+      typeof data.message === "string"
+        ? data.message
+        : Array.isArray(data.message)
+          ? data.message.join(", ")
+          : "Request failed";
+    throw new ApiError(message, response.status, data);
+  }
+
+  return data as T;
+}
+
+export const notesApi = {
+  getAvailableTopics: () =>
+    notesRequest<{ topics: AvailableTopic[] }>("/author/topics/available"),
+
+  getMyArticles: () =>
+    notesRequest<{ articles: MyArticle[] }>("/author/articles"),
+
+  getAuthorArticle: (id: string) =>
+    notesRequest<{ article: MyArticle & { content: string } }>(`/author/articles/${id}`),
+
+  createArticle: (payload: {
+    topicId: string;
+    title: string;
+    slug: string;
+    content: string;
+  }) =>
+    notesRequest("/author/articles", { method: "POST", body: payload }),
+
+  updateArticle: (
+    id: string,
+    payload: { title?: string; slug?: string; content?: string },
+  ) =>
+    notesRequest(`/author/articles/${id}`, { method: "PATCH", body: payload }),
+
+  submitArticle: (id: string) =>
+    notesRequest(`/author/articles/${id}/submit`, { method: "POST" }),
+
+  getReviewQueue: () =>
+    notesRequest<{ articles: ReviewArticle[] }>("/admin/review-queue"),
+
+  reviewArticle: (
+    id: string,
+    payload: { action: "approve" | "reject" | "request_changes"; comment?: string },
+  ) =>
+    notesRequest(`/admin/articles/${id}/review`, {
+      method: "POST",
+      body: payload,
+    }),
+
+  createCategory: (payload: {
+    name: string;
+    slug: string;
+    description?: string;
+    icon?: string;
+  }) => notesRequest("/admin/categories", { method: "POST", body: payload }),
+
+  createTopic: (payload: {
+    categoryId: string;
+    name: string;
+    slug: string;
+    description?: string;
+    openForAuthors?: boolean;
+  }) => notesRequest("/admin/topics", { method: "POST", body: payload }),
+
+  createArticleAdmin: (payload: {
+    topicId: string;
+    title: string;
+    slug: string;
+    content: string;
+    published?: boolean;
+  }) => notesRequest("/admin/articles", { method: "POST", body: payload }),
+};
+
+export const statusLabels: Record<ArticleStatus, string> = {
+  DRAFT: "Draft",
+  SUBMITTED: "Submitted",
+  CHANGES_REQUESTED: "Changes requested",
+  PUBLISHED: "Published",
+  REJECTED: "Rejected",
+};
+
+export const statusStyles: Record<ArticleStatus, string> = {
+  DRAFT: "bg-white/[0.06] text-muted-foreground",
+  SUBMITTED: "bg-amber-500/12 text-amber-200",
+  CHANGES_REQUESTED: "bg-orange-500/12 text-orange-200",
+  PUBLISHED: "badge-live",
+  REJECTED: "bg-destructive/12 text-destructive",
+};

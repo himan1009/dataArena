@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  EDITOR
+  ADMIN
+}
+
+enum ArticleStatus {
+  DRAFT
+  SUBMITTED
+  CHANGES_REQUESTED
+  PUBLISHED
+  REJECTED
+}
+
+enum TopicStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String?
+  role          Role      @default(USER)
+  linkedinUrl   String?
+  isActive      Boolean   @default(true)
+  deactivatedAt DateTime?
+  emailVerified Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  refreshTokens RefreshToken[]
+  articles      Article[]
+  claimedTopics Topic[]        @relation("ClaimedTopics")
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  icon        String?
+  sortOrder   Int      @default(0)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  topics Topic[]
+
+  @@map("categories")
+}
+
+model Topic {
+  id             String      @id @default(cuid())
+  categoryId     String
+  name           String
+  slug           String
+  description    String?
+  sortOrder      Int         @default(0)
+  published      Boolean     @default(true)
+  openForAuthors Boolean     @default(false)
+  status         TopicStatus @default(OPEN)
+  claimedById    String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  category  Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  claimedBy User?     @relation("ClaimedTopics", fields: [claimedById], references: [id], onDelete: SetNull)
+  articles  Article[]
+
+  @@unique([categoryId, slug])
+  @@index([categoryId])
+  @@index([claimedById])
+  @@map("topics")
+}
+
+model Article {
+  id            String        @id @default(cuid())
+  topicId       String
+  authorId      String?
+  title         String
+  slug          String
+  content       String        @db.Text
+  status        ArticleStatus @default(DRAFT)
+  reviewComment String?
+  sortOrder     Int           @default(0)
+  published     Boolean       @default(false)
+  submittedAt   DateTime?
+  reviewedAt    DateTime?
+  publishedAt           DateTime?
+  authorNameSnapshot    String?
+  authorLinkedinSnapshot String?
+  createdAt             DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  topic  Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@unique([topicId, slug])
+  @@index([topicId])
+  @@index([authorId])
+  @@index([status])
+  @@map("articles")
+}
