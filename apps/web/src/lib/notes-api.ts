@@ -10,6 +10,7 @@ export type AuthorSummary = {
   name: string | null;
   email: string;
   linkedinUrl: string | null;
+  role?: string;
 };
 
 export type AvailableTopic = {
@@ -32,6 +33,14 @@ export type MyArticle = {
   slug: string;
   status: ArticleStatus;
   reviewComment: string | null;
+  editRequestedAt: string | null;
+  editRequestNote: string | null;
+  editAssignee: AuthorSummary | null;
+  author?: AuthorSummary | null;
+  isAssignedToMe?: boolean;
+  isEditedByMe?: boolean;
+  editorEditedAt?: string | null;
+  canEdit?: boolean;
   updatedAt: string;
   submittedAt: string | null;
   publishedAt: string | null;
@@ -56,6 +65,13 @@ export type ReviewArticle = {
     slug: string;
     category: { name: string; slug: string };
   };
+};
+
+export type EditRequestArticle = ReviewArticle & {
+  editRequestedAt: string;
+  editRequestNote: string | null;
+  editAssignee: AuthorSummary | null;
+  editRequestedBy: AuthorSummary | null;
 };
 
 export class ApiError extends Error {
@@ -102,10 +118,21 @@ export const notesApi = {
     notesRequest<{ topics: AvailableTopic[] }>("/author/topics/available"),
 
   getMyArticles: () =>
-    notesRequest<{ articles: MyArticle[] }>("/author/articles"),
+    notesRequest<{ writtenBy: MyArticle[]; editedBy: MyArticle[] }>(
+      "/author/articles",
+    ),
+
+  getEditors: () =>
+    notesRequest<{ editors: AuthorSummary[] }>("/author/editors"),
 
   getAuthorArticle: (id: string) =>
-    notesRequest<{ article: MyArticle & { content: string } }>(`/author/articles/${id}`),
+    notesRequest<{
+      article: MyArticle & {
+        content: string;
+        canEdit?: boolean;
+        isAssignedToMe?: boolean;
+      };
+    }>(`/author/articles/${id}`),
 
   createArticle: (payload: {
     topicId: string;
@@ -124,8 +151,38 @@ export const notesApi = {
   submitArticle: (id: string) =>
     notesRequest(`/author/articles/${id}/submit`, { method: "POST" }),
 
+  requestEditAccess: (id: string, payload: { note: string }) =>
+    notesRequest(`/author/articles/${id}/request-edit`, {
+      method: "POST",
+      body: payload,
+    }),
+
+  getAdminEditors: () =>
+    notesRequest<{ editors: AuthorSummary[] }>("/admin/editors"),
+
   getReviewQueue: () =>
     notesRequest<{ articles: ReviewArticle[] }>("/admin/review-queue"),
+
+  getEditRequestQueue: () =>
+    notesRequest<{ articles: EditRequestArticle[] }>("/admin/edit-requests"),
+
+  reviewEditRequest: (
+    id: string,
+    payload: { action: "approve" | "reject"; comment?: string; assigneeId?: string },
+  ) =>
+    notesRequest(`/admin/articles/${id}/edit-request/review`, {
+      method: "POST",
+      body: payload,
+    }),
+
+  assignEditor: (
+    id: string,
+    payload: { assigneeId: string; comment?: string },
+  ) =>
+    notesRequest(`/admin/articles/${id}/assign-editor`, {
+      method: "POST",
+      body: payload,
+    }),
 
   reviewArticle: (
     id: string,
@@ -158,6 +215,45 @@ export const notesApi = {
     content: string;
     published?: boolean;
   }) => notesRequest("/admin/articles", { method: "POST", body: payload }),
+
+  getAdminArticle: (id: string) =>
+    notesRequest<{
+      article: {
+        id: string;
+        title: string;
+        slug: string;
+        content: string;
+        status: ArticleStatus;
+        topic: {
+          name: string;
+          slug: string;
+          category: { name: string; slug: string };
+        };
+      };
+    }>(`/admin/articles/${id}`),
+
+  updateArticleAdmin: (
+    id: string,
+    payload: {
+      title?: string;
+      slug?: string;
+      content?: string;
+      published?: boolean;
+    },
+  ) =>
+    notesRequest(`/admin/articles/${id}`, { method: "PATCH", body: payload }),
+
+  deleteCategory: (id: string) =>
+    notesRequest(`/admin/categories/${id}`, { method: "DELETE" }),
+
+  deleteTopic: (id: string) =>
+    notesRequest(`/admin/topics/${id}`, { method: "DELETE" }),
+
+  deleteArticleAdmin: (id: string) =>
+    notesRequest(`/admin/articles/${id}`, { method: "DELETE" }),
+
+  deleteAuthorArticle: (id: string) =>
+    notesRequest(`/author/articles/${id}`, { method: "DELETE" }),
 };
 
 export const statusLabels: Record<ArticleStatus, string> = {

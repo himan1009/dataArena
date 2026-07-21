@@ -120,6 +120,18 @@ export function RegisterForm() {
           )}
         </div>
 
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          By creating an account, you agree to our{" "}
+          <Link href="/legal/terms" className="text-primary hover:text-primary/80">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link href="/legal/privacy" className="text-primary hover:text-primary/80">
+            Privacy Policy
+          </Link>
+          .
+        </p>
+
         <Button
           type="submit"
           className="h-11 w-full shadow-lg shadow-primary/20"

@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUrl } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUrl, ValidateIf } from 'class-validator';
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -50,6 +50,41 @@ export enum ReviewAction {
 export class ReviewArticleDto {
   @IsEnum(ReviewAction)
   action!: ReviewAction;
+
+  @IsOptional()
+  @IsString()
+  comment?: string;
+}
+
+export enum EditRequestReviewAction {
+  APPROVE = 'approve',
+  REJECT = 'reject',
+}
+
+export class RequestEditAccessDto {
+  @IsString()
+  @IsNotEmpty()
+  note!: string;
+}
+
+export class ReviewEditRequestDto {
+  @IsEnum(EditRequestReviewAction)
+  action!: EditRequestReviewAction;
+
+  @IsOptional()
+  @IsString()
+  comment?: string;
+
+  @ValidateIf((dto) => dto.action === EditRequestReviewAction.APPROVE)
+  @IsString()
+  @IsNotEmpty()
+  assigneeId?: string;
+}
+
+export class AssignEditorDto {
+  @IsString()
+  @IsNotEmpty()
+  assigneeId!: string;
 
   @IsOptional()
   @IsString()

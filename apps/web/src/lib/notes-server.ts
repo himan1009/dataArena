@@ -51,6 +51,16 @@ export type ArticleDetail = {
   content: string;
   updatedAt: string;
   publishedAt?: string | null;
+  adminEditedAt?: string | null;
+  editorEditedAt?: string | null;
+  lastEditedByRole?: string | null;
+  lastEditorNameSnapshot?: string | null;
+  lastEditor?: {
+    id: string;
+    name: string | null;
+    email: string;
+    linkedinUrl: string | null;
+  } | null;
   author?: {
     id: string;
     name: string | null;
@@ -161,6 +171,13 @@ export async function getAdminCategories() {
       description: string | null;
       published: boolean;
       sortOrder: number;
+      topics: Array<{
+        id: string;
+        name: string;
+        slug: string;
+        published: boolean;
+        openForAuthors: boolean;
+      }>;
       _count: { topics: number };
     }>;
   }>("/admin/categories");
@@ -173,6 +190,7 @@ export async function getAdminCategories() {
     published: category.published,
     sortOrder: category.sortOrder,
     topicCount: category._count.topics,
+    topics: category.topics,
   }));
 }
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Shield, ClipboardCheck, Users } from "lucide-react";
+import { Shield, ClipboardCheck, Users, BookOpen, Inbox } from "lucide-react";
 
 import { AdminNotesPanel } from "@/components/admin/admin-notes-panel";
 import { IconBox } from "@/components/ui/icon-box";
@@ -17,9 +17,21 @@ export const metadata = {
 const adminLinks = [
   {
     title: "Review queue",
-    description: "Approve, request changes, or reject author submissions.",
+    description: "Approve submissions, assign editors for edit requests, and publish articles.",
     href: "/admin/reviews",
     icon: ClipboardCheck,
+  },
+  {
+    title: "Notes editor",
+    description: "Open any article from Notes and use Edit to change it directly as admin.",
+    href: "/notes",
+    icon: BookOpen,
+  },
+  {
+    title: "Inbox",
+    description: "Read contact messages and bug reports. Reply via email with the original message included.",
+    href: "/admin/inbox",
+    icon: Inbox,
   },
   {
     title: "User management",

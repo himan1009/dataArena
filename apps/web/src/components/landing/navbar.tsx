@@ -8,9 +8,9 @@ import type { AuthUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "#features", label: "Features" },
-  { href: "#principles", label: "Method" },
-  { href: "#roadmap", label: "Roadmap" },
+  { href: "/#features", label: "Features" },
+  { href: "/#principles", label: "Method" },
+  { href: "/#roadmap", label: "Roadmap" },
 ];
 
 export function Navbar({ user }: { user: AuthUser | null }) {
@@ -22,13 +22,13 @@ export function Navbar({ user }: { user: AuthUser | null }) {
 
           <nav className="hidden items-center gap-1 md:flex">
             {links.map((link) => (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
                 className="rounded-xl px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-white/[0.04] hover:text-foreground"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </nav>
 
@@ -39,10 +39,10 @@ export function Navbar({ user }: { user: AuthUser | null }) {
                   href="/dashboard"
                   className={cn(
                     buttonVariants({ variant: "outline", size: "sm" }),
-                    "hidden border-white/[0.1] bg-white/[0.02] sm:inline-flex",
+                    "border-white/[0.1] bg-white/[0.02]",
                   )}
                 >
-                  Workspace
+                  Dashboard
                 </Link>
                 <UserMenu user={user} />
               </>

@@ -4,6 +4,7 @@ import {
   Bot,
   ClipboardCheck,
   Code2,
+  Inbox,
   LayoutDashboard,
   PenLine,
   Search,
@@ -92,6 +93,13 @@ export const secondaryNavItems: NavItem[] = [
     href: "/admin/reviews",
     icon: ClipboardCheck,
     description: "Author submission queue",
+    adminOnly: true,
+  },
+  {
+    title: "Inbox",
+    href: "/admin/inbox",
+    icon: Inbox,
+    description: "Contact messages and bug reports",
     adminOnly: true,
   },
   {

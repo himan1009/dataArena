@@ -5,13 +5,17 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ArticleStatus, Prisma, TopicStatus } from '@prisma/client';
+import { ArticleStatus, Prisma, Role, TopicStatus } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateAuthorArticleDto,
+  EditRequestReviewAction,
+  RequestEditAccessDto,
   ReviewAction,
   ReviewArticleDto,
+  ReviewEditRequestDto,
+  AssignEditorDto,
   UpdateAuthorArticleDto,
 } from './dto/author.dto';
 import {
@@ -55,6 +59,111 @@ function mapPublishedAuthor(article: {
 @Injectable()
 export class NotesService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private async findArticleForAuthorAccess(articleId: string, userId: string) {
+    return this.prisma.article.findFirst({
+      where: {
+        id: articleId,
+        OR: [
+          { authorId: userId },
+          { editAssigneeId: userId },
+          {
+            lastEditedById: userId,
+            authorId: { not: userId },
+          },
+        ],
+      },
+      include: {
+        topic: {
+          include: {
+            category: { select: { name: true, slug: true } },
+          },
+        },
+        author: { select: authorSelect },
+        editAssignee: { select: authorSelect },
+        editRequestedBy: { select: authorSelect },
+      },
+    });
+  }
+
+  private canUserEditArticle(
+    article: {
+      authorId: string | null;
+      editAssigneeId: string | null;
+      status: ArticleStatus;
+    },
+    userId: string,
+  ) {
+    if (article.editAssigneeId === userId) {
+      return (
+        article.status === ArticleStatus.CHANGES_REQUESTED ||
+        article.status === ArticleStatus.PUBLISHED ||
+        article.status === ArticleStatus.SUBMITTED
+      );
+    }
+
+    if (article.authorId === userId) {
+      return (
+        article.status === ArticleStatus.DRAFT ||
+        article.status === ArticleStatus.CHANGES_REQUESTED
+      );
+    }
+
+    return false;
+  }
+
+  private applyEditorAudit(
+    data: Prisma.ArticleUpdateInput,
+    editor?: { id: string; role: Role },
+  ) {
+    if (!editor) {
+      return data;
+    }
+
+    data.lastEditedBy = { connect: { id: editor.id } };
+    data.lastEditedByRole = editor.role;
+
+    if (editor.role === Role.ADMIN) {
+      data.adminEditedAt = new Date();
+    }
+
+    if (editor.role === Role.EDITOR) {
+      data.editorEditedAt = new Date();
+    }
+
+    return data;
+  }
+
+  private async getEditorSnapshot(editorId: string) {
+    const editor = await this.prisma.user.findUnique({
+      where: { id: editorId },
+      select: { name: true, email: true },
+    });
+
+    return (
+      editor?.name?.trim() ||
+      editor?.email.split('@')[0] ||
+      'Editor'
+    );
+  }
+
+  async listAuthorEditors() {
+    const editors = await this.prisma.user.findMany({
+      where: {
+        isActive: true,
+        role: { in: [Role.EDITOR, Role.ADMIN] },
+      },
+      orderBy: [{ name: 'asc' }, { email: 'asc' }],
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+    });
+
+    return { editors };
+  }
 
   private async getAuthorSnapshots(authorId: string | null) {
     if (!authorId) {
@@ -213,6 +322,7 @@ export class NotesService {
       },
       include: {
         author: { select: authorSelect },
+        lastEditedBy: { select: authorSelect },
         topic: {
           include: {
             category: true,
@@ -242,6 +352,28 @@ export class NotesService {
         content: article.content,
         updatedAt: article.updatedAt,
         publishedAt: article.publishedAt,
+        adminEditedAt: article.adminEditedAt,
+        editorEditedAt: article.editorEditedAt,
+        lastEditedByRole: article.lastEditedByRole,
+        lastEditorNameSnapshot: article.lastEditorNameSnapshot,
+        lastEditor: article.lastEditedBy
+          ? {
+              id: article.lastEditedBy.id,
+              name:
+                article.lastEditorNameSnapshot ||
+                article.lastEditedBy.name ||
+                article.lastEditedBy.email.split('@')[0],
+              email: article.lastEditedBy.email,
+              linkedinUrl: article.lastEditedBy.linkedinUrl,
+            }
+          : article.lastEditorNameSnapshot
+            ? {
+                id: 'editor-snapshot',
+                name: article.lastEditorNameSnapshot,
+                email: '',
+                linkedinUrl: null,
+              }
+            : null,
         author: mapPublishedAuthor(article),
         topic: {
           id: article.topic.id,
@@ -328,58 +460,115 @@ export class NotesService {
     };
   }
 
-  async listMyArticles(authorId: string) {
-    const articles = await this.prisma.article.findMany({
-      where: { authorId },
-      orderBy: { updatedAt: 'desc' },
-      include: {
-        topic: {
-          include: {
-            category: {
-              select: { name: true, slug: true },
-            },
+  async listMyArticles(userId: string) {
+    const include = {
+      topic: {
+        include: {
+          category: {
+            select: { name: true, slug: true },
           },
         },
+      },
+      author: { select: authorSelect },
+      editAssignee: { select: authorSelect },
+      editRequestedBy: { select: authorSelect },
+    };
+
+    const [writtenBy, editedBy] = await Promise.all([
+      this.prisma.article.findMany({
+        where: { authorId: userId },
+        orderBy: { updatedAt: 'desc' },
+        include,
+      }),
+      this.prisma.article.findMany({
+        where: {
+          authorId: { not: userId },
+          OR: [{ editAssigneeId: userId }, { lastEditedById: userId }],
+        },
+        orderBy: { updatedAt: 'desc' },
+        include,
+      }),
+    ]);
+
+    const mapArticle = (article: (typeof writtenBy)[number]) => ({
+      id: article.id,
+      title: article.title,
+      slug: article.slug,
+      status: article.status,
+      reviewComment: article.reviewComment,
+      editRequestedAt: article.editRequestedAt,
+      editRequestNote: article.editRequestNote,
+      editAssignee: article.editAssignee,
+      editorEditedAt: article.editorEditedAt,
+      isAssignedToMe:
+        article.editAssigneeId === userId && article.authorId !== userId,
+      isEditedByMe: article.authorId !== userId,
+      canEdit: this.canUserEditArticle(article, userId),
+      updatedAt: article.updatedAt,
+      submittedAt: article.submittedAt,
+      publishedAt: article.publishedAt,
+      author: this.mapWorkspaceAuthor(article),
+      topic: {
+        id: article.topic.id,
+        name: article.topic.name,
+        slug: article.topic.slug,
+        category: article.topic.category,
       },
     });
 
     return {
-      articles: articles.map((article) => ({
-        id: article.id,
-        title: article.title,
-        slug: article.slug,
-        status: article.status,
-        reviewComment: article.reviewComment,
-        updatedAt: article.updatedAt,
-        submittedAt: article.submittedAt,
-        publishedAt: article.publishedAt,
-        topic: {
-          id: article.topic.id,
-          name: article.topic.name,
-          slug: article.topic.slug,
-          category: article.topic.category,
-        },
-      })),
+      writtenBy: writtenBy.map(mapArticle),
+      editedBy: editedBy.map(mapArticle),
     };
   }
 
-  async getAuthorArticle(articleId: string, authorId: string) {
-    const article = await this.prisma.article.findFirst({
-      where: { id: articleId, authorId },
-      include: {
-        topic: {
-          include: {
-            category: { select: { name: true, slug: true } },
-          },
-        },
-      },
-    });
+  private mapWorkspaceAuthor(article: {
+    authorNameSnapshot: string | null;
+    authorLinkedinSnapshot: string | null;
+    author: {
+      id: string;
+      name: string | null;
+      email: string;
+      linkedinUrl: string | null;
+    } | null;
+  }) {
+    if (article.author) {
+      return {
+        id: article.author.id,
+        name: article.authorNameSnapshot || article.author.name,
+        email: article.author.email,
+        linkedinUrl:
+          article.authorLinkedinSnapshot ?? article.author.linkedinUrl,
+      };
+    }
+
+    if (article.authorNameSnapshot) {
+      return {
+        id: 'author-snapshot',
+        name: article.authorNameSnapshot,
+        email: '',
+        linkedinUrl: article.authorLinkedinSnapshot,
+      };
+    }
+
+    return null;
+  }
+
+  async getAuthorArticle(articleId: string, userId: string) {
+    const article = await this.findArticleForAuthorAccess(articleId, userId);
 
     if (!article) {
       throw new NotFoundException('Article not found');
     }
 
-    return { article };
+    return {
+      article: {
+        ...article,
+        canEdit: this.canUserEditArticle(article, userId),
+        isAssignedToMe:
+          article.editAssigneeId === userId && article.authorId !== userId,
+      },
+    };
   }
 
   async createAuthorArticle(authorId: string, dto: CreateAuthorArticleDto) {
@@ -446,8 +635,122 @@ export class NotesService {
 
   async updateAuthorArticle(
     articleId: string,
-    authorId: string,
+    userId: string,
     dto: UpdateAuthorArticleDto,
+    editor?: { id: string; role: Role },
+  ) {
+    const article = await this.findArticleForAuthorAccess(articleId, userId);
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+
+    if (!this.canUserEditArticle(article, userId)) {
+      throw new ForbiddenException('You do not have permission to edit this article');
+    }
+
+    const data: Prisma.ArticleUpdateInput = { ...dto };
+
+    if (editor) {
+      data.lastEditedBy = { connect: { id: editor.id } };
+      data.lastEditedByRole = editor.role;
+
+      // Credit team editors — anyone saving who is not the original author
+      if (article.authorId !== userId) {
+        data.editorEditedAt = new Date();
+        data.lastEditorNameSnapshot = await this.getEditorSnapshot(userId);
+      }
+    }
+
+    const updated = await this.prisma.article.update({
+      where: { id: articleId },
+      data,
+    });
+
+    return { article: updated, message: 'Draft saved' };
+  }
+
+  async submitAuthorArticle(articleId: string, userId: string) {
+    const article = await this.findArticleForAuthorAccess(articleId, userId);
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+
+    if (!this.canUserEditArticle(article, userId)) {
+      throw new ForbiddenException('Only drafts or revision requests can be submitted');
+    }
+
+    const isAssignedRevision =
+      article.editAssigneeId === userId && article.authorId !== userId;
+
+    const updated = await this.prisma.article.update({
+      where: { id: articleId },
+      data: {
+        status: ArticleStatus.SUBMITTED,
+        submittedAt: new Date(),
+        published:
+          isAssignedRevision && article.status === ArticleStatus.PUBLISHED
+            ? false
+            : article.published,
+        reviewComment: null,
+        editAssigneeId: null,
+        editRequestedById: null,
+      },
+    });
+
+    return { article: updated, message: 'Article submitted for review' };
+  }
+
+  async deleteAuthorArticle(
+    articleId: string,
+    userId: string,
+    userRole: Role,
+  ) {
+    const article = await this.prisma.article.findFirst({
+      where:
+        userRole === Role.ADMIN
+          ? { id: articleId }
+          : { id: articleId, authorId: userId },
+      include: { topic: true },
+    });
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+
+    if (userRole !== Role.ADMIN && article.status !== ArticleStatus.DRAFT) {
+      throw new ForbiddenException('You can only delete draft articles');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.article.delete({ where: { id: articleId } });
+
+      const remaining = await tx.article.count({
+        where: {
+          topicId: article.topicId,
+          status: { not: ArticleStatus.REJECTED },
+        },
+      });
+
+      if (remaining === 0) {
+        await tx.topic.update({
+          where: { id: article.topicId },
+          data: {
+            status: TopicStatus.OPEN,
+            claimedById: null,
+          },
+        });
+      }
+    });
+
+    return { message: 'Article deleted' };
+  }
+
+  async requestEditAccess(
+    articleId: string,
+    authorId: string,
+    dto: RequestEditAccessDto,
   ) {
     const article = await this.prisma.article.findFirst({
       where: { id: articleId, authorId },
@@ -458,23 +761,130 @@ export class NotesService {
     }
 
     if (
-      article.status !== ArticleStatus.DRAFT &&
-      article.status !== ArticleStatus.CHANGES_REQUESTED
+      article.status !== ArticleStatus.SUBMITTED &&
+      article.status !== ArticleStatus.PUBLISHED
     ) {
-      throw new ForbiddenException('You can only edit draft or change-requested articles');
+      throw new BadRequestException(
+        'You can only request edit access for submitted or published articles',
+      );
+    }
+
+    if (article.editRequestedAt) {
+      throw new BadRequestException('An edit request is already pending');
+    }
+
+    const note = dto.note?.trim();
+    if (!note) {
+      throw new BadRequestException('A comment is required when requesting edits');
     }
 
     const updated = await this.prisma.article.update({
       where: { id: articleId },
-      data: dto,
+      data: {
+        editRequestedAt: new Date(),
+        editRequestNote: note,
+        editRequestedById: authorId,
+        editAssigneeId: null,
+      },
     });
 
-    return { article: updated, message: 'Draft saved' };
+    return { article: updated, message: 'Edit request sent to admin' };
   }
 
-  async submitAuthorArticle(articleId: string, authorId: string) {
-    const article = await this.prisma.article.findFirst({
-      where: { id: articleId, authorId },
+  async getEditRequestQueue() {
+    const articles = await this.prisma.article.findMany({
+      where: {
+        editRequestedAt: { not: null },
+      },
+      orderBy: { editRequestedAt: 'asc' },
+      include: {
+        author: { select: authorSelect },
+        editRequestedBy: { select: authorSelect },
+        editAssignee: { select: authorSelect },
+        topic: {
+          include: {
+            category: { select: { name: true, slug: true } },
+          },
+        },
+      },
+    });
+
+    return { articles };
+  }
+
+  async reviewEditRequest(articleId: string, dto: ReviewEditRequestDto) {
+    const article = await this.prisma.article.findUnique({
+      where: { id: articleId },
+    });
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+
+    if (!article.editRequestedAt) {
+      throw new BadRequestException('This article has no pending edit request');
+    }
+
+    if (dto.action === EditRequestReviewAction.APPROVE) {
+      const assigneeId = dto.assigneeId?.trim();
+
+      if (!assigneeId) {
+        throw new BadRequestException(
+          'An editor must be assigned when approving an edit request',
+        );
+      }
+
+      const assignee = await this.prisma.user.findFirst({
+        where: {
+          id: assigneeId,
+          isActive: true,
+          role: { in: [Role.EDITOR, Role.ADMIN] },
+        },
+      });
+
+      if (!assignee) {
+        throw new BadRequestException('Selected editor is not available');
+      }
+
+      const updated = await this.prisma.article.update({
+        where: { id: articleId },
+        data: {
+          reviewedAt: new Date(),
+          reviewComment:
+            dto.comment?.trim() ||
+            'Edit access granted. Update the article and submit again for review.',
+          editRequestedAt: null,
+          editRequestNote: null,
+          editAssigneeId: assigneeId,
+        },
+      });
+
+      return { article: updated, message: 'Edit access granted' };
+    }
+
+    if (dto.action === EditRequestReviewAction.REJECT) {
+      const updated = await this.prisma.article.update({
+        where: { id: articleId },
+        data: {
+          reviewComment:
+            dto.comment?.trim() ||
+            'Your edit request was declined. Contact admin if you need changes.',
+          editRequestedAt: null,
+          editRequestNote: null,
+          editRequestedById: null,
+          editAssigneeId: null,
+        },
+      });
+
+      return { article: updated, message: 'Edit request declined' };
+    }
+
+    throw new BadRequestException('Invalid edit request action');
+  }
+
+  async assignEditorToArticle(articleId: string, dto: AssignEditorDto) {
+    const article = await this.prisma.article.findUnique({
+      where: { id: articleId },
     });
 
     if (!article) {
@@ -482,22 +892,57 @@ export class NotesService {
     }
 
     if (
-      article.status !== ArticleStatus.DRAFT &&
-      article.status !== ArticleStatus.CHANGES_REQUESTED
+      article.status !== ArticleStatus.PUBLISHED &&
+      article.status !== ArticleStatus.SUBMITTED
     ) {
-      throw new ForbiddenException('Only drafts or revision requests can be submitted');
+      throw new BadRequestException(
+        'Only published or submitted articles can have an editor assigned',
+      );
+    }
+
+    if (article.editRequestedAt) {
+      throw new BadRequestException(
+        'This article has a pending edit request. Resolve it in the review queue first.',
+      );
+    }
+
+    if (article.editAssigneeId) {
+      throw new BadRequestException(
+        'An editor is already assigned to this article',
+      );
+    }
+
+    const assigneeId = dto.assigneeId.trim();
+    const assignee = await this.prisma.user.findFirst({
+      where: {
+        id: assigneeId,
+        isActive: true,
+        role: { in: [Role.EDITOR, Role.ADMIN] },
+      },
+    });
+
+    if (!assignee) {
+      throw new BadRequestException('Selected team member is not available');
     }
 
     const updated = await this.prisma.article.update({
       where: { id: articleId },
       data: {
-        status: ArticleStatus.SUBMITTED,
-        submittedAt: new Date(),
-        reviewComment: null,
+        reviewedAt: new Date(),
+        reviewComment:
+          dto.comment?.trim() ||
+          `Edit access granted to ${assignee.name || assignee.email}. Update the article and submit for review.`,
+        editAssigneeId: assigneeId,
+        editRequestedAt: null,
+        editRequestNote: null,
+        editRequestedById: null,
       },
     });
 
-    return { article: updated, message: 'Article submitted for review' };
+    return {
+      article: updated,
+      message: `Edit access granted to ${assignee.name || assignee.email}`,
+    };
   }
 
   async getReviewQueue() {
@@ -547,8 +992,10 @@ export class NotesService {
             publishedAt: now,
             reviewedAt: now,
             reviewComment: dto.comment ?? null,
-            authorNameSnapshot: snapshots.authorNameSnapshot,
-            authorLinkedinSnapshot: snapshots.authorLinkedinSnapshot,
+            authorNameSnapshot:
+              article.authorNameSnapshot ?? snapshots.authorNameSnapshot,
+            authorLinkedinSnapshot:
+              article.authorLinkedinSnapshot ?? snapshots.authorLinkedinSnapshot,
           },
         });
 
@@ -613,6 +1060,16 @@ export class NotesService {
     const categories = await this.prisma.category.findMany({
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       include: {
+        topics: {
+          orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            published: true,
+            openForAuthors: true,
+          },
+        },
         _count: {
           select: { topics: true },
         },
@@ -683,8 +1140,46 @@ export class NotesService {
       .catch(this.handleUniqueError('Article slug already exists in topic'));
   }
 
-  async updateArticle(id: string, dto: UpdateArticleDto) {
-    const data: Prisma.ArticleUpdateInput = { ...dto };
+  async getAdminArticle(articleId: string) {
+    const article = await this.prisma.article.findUnique({
+      where: { id: articleId },
+      include: {
+        author: { select: authorSelect },
+        topic: {
+          include: {
+            category: { select: { id: true, name: true, slug: true } },
+          },
+        },
+      },
+    });
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+
+    return { article };
+  }
+
+  async updateArticle(
+    id: string,
+    dto: UpdateArticleDto,
+    editor?: { id: string; role: Role },
+  ) {
+    const existing = await this.prisma.article.findUnique({
+      where: { id },
+      select: {
+        authorId: true,
+        authorNameSnapshot: true,
+        status: true,
+        published: true,
+      },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Article not found');
+    }
+
+    const data = this.applyEditorAudit({ ...dto }, editor);
 
     if (dto.published !== undefined) {
       data.status = dto.published
@@ -692,18 +1187,17 @@ export class NotesService {
         : ArticleStatus.DRAFT;
       data.publishedAt = dto.published ? new Date() : null;
 
-      if (dto.published) {
-        const existing = await this.prisma.article.findUnique({
-          where: { id },
-          select: { authorId: true, authorNameSnapshot: true },
-        });
-
-        if (existing && !existing.authorNameSnapshot) {
-          const snapshots = await this.getAuthorSnapshots(existing.authorId);
-          data.authorNameSnapshot = snapshots.authorNameSnapshot;
-          data.authorLinkedinSnapshot = snapshots.authorLinkedinSnapshot;
-        }
+      if (dto.published && !existing.authorNameSnapshot) {
+        const snapshots = await this.getAuthorSnapshots(existing.authorId);
+        data.authorNameSnapshot = snapshots.authorNameSnapshot;
+        data.authorLinkedinSnapshot = snapshots.authorLinkedinSnapshot;
       }
+    } else if (
+      existing.status === ArticleStatus.PUBLISHED &&
+      (dto.title !== undefined || dto.slug !== undefined || dto.content !== undefined)
+    ) {
+      data.status = ArticleStatus.PUBLISHED;
+      data.published = true;
     }
 
     return this.prisma.article
@@ -712,9 +1206,31 @@ export class NotesService {
   }
 
   deleteArticle(id: string) {
-    return this.prisma.article
-      .delete({ where: { id } })
-      .catch(this.handleNotFound('Article not found'));
+    return this.prisma.$transaction(async (tx) => {
+      const article = await tx.article.findUnique({
+        where: { id },
+        select: { topicId: true },
+      });
+
+      if (!article) {
+        throw new NotFoundException('Article not found');
+      }
+
+      await tx.article.delete({ where: { id } });
+
+      const remaining = await tx.article.count({
+        where: { topicId: article.topicId, status: { not: ArticleStatus.REJECTED } },
+      });
+
+      if (remaining === 0) {
+        await tx.topic.update({
+          where: { id: article.topicId },
+          data: { status: TopicStatus.OPEN, claimedById: null },
+        });
+      }
+
+      return { message: 'Article deleted' };
+    });
   }
 
   private handleUniqueError(message: string) {

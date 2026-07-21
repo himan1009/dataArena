@@ -1,14 +1,22 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Loader2, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiError, notesApi } from "@/lib/notes-api";
 import { slugify } from "@/lib/notes-utils";
+
+type AdminTopic = {
+  id: string;
+  name: string;
+  slug: string;
+  published: boolean;
+  openForAuthors: boolean;
+};
 
 type AdminCategory = {
   id: string;
@@ -18,6 +26,7 @@ type AdminCategory = {
   published: boolean;
   sortOrder: number;
   topicCount?: number;
+  topics?: AdminTopic[];
 };
 
 export function AdminNotesPanel({
@@ -44,8 +53,19 @@ export function AdminNotesPanel({
     description: "",
   });
 
+  const allTopics = useMemo(
+    () =>
+      categories.flatMap((category) =>
+        (category.topics ?? []).map((topic) => ({
+          ...topic,
+          categoryName: category.name,
+        })),
+      ),
+    [categories],
+  );
+
   const [articleForm, setArticleForm] = useState({
-    topicId: "",
+    topicId: allTopics[0]?.id ?? "",
     title: "",
     slug: "",
     content: "# New article\n\nStart writing markdown here.",
@@ -74,6 +94,9 @@ export function AdminNotesPanel({
       setIsSubmitting(null);
     }
   };
+
+  const confirmDelete = (label: string) =>
+    window.confirm(`Delete ${label}? This cannot be undone.`);
 
   return (
     <div className="space-y-8">
@@ -268,7 +291,7 @@ export function AdminNotesPanel({
           onSubmit={(event) => {
             event.preventDefault();
             submit("article", () =>
-              notesApi.createArticle({
+              notesApi.createArticleAdmin({
                 topicId: articleForm.topicId,
                 title: articleForm.title,
                 slug: articleForm.slug || slugify(articleForm.title),
@@ -278,11 +301,10 @@ export function AdminNotesPanel({
           }}
         >
           <div className="space-y-2">
-            <Label htmlFor="article-topic-id">Topic ID</Label>
-            <Input
-              id="article-topic-id"
-              className="surface-input"
-              placeholder="Paste topic ID from database or future picker"
+            <Label htmlFor="article-topic">Topic</Label>
+            <select
+              id="article-topic"
+              className="surface-input w-full rounded-xl px-3"
               value={articleForm.topicId}
               onChange={(event) =>
                 setArticleForm((current) => ({
@@ -291,7 +313,13 @@ export function AdminNotesPanel({
                 }))
               }
               required
-            />
+            >
+              {allTopics.map((topic) => (
+                <option key={topic.id} value={topic.id}>
+                  {topic.categoryName} · {topic.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
@@ -341,7 +369,7 @@ export function AdminNotesPanel({
               required
             />
           </div>
-          <Button type="submit" disabled={isSubmitting === "article"}>
+          <Button type="submit" disabled={isSubmitting === "article" || !allTopics.length}>
             {isSubmitting === "article" ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
@@ -355,19 +383,93 @@ export function AdminNotesPanel({
       </section>
 
       <section className="glass-panel p-6 sm:p-8">
-        <h3 className="font-semibold tracking-tight">Existing categories</h3>
-        <div className="mt-4 space-y-3">
+        <h3 className="font-semibold tracking-tight">Manage categories & topics</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Delete empty or unused categories and topics. Deleting a category removes all its topics and articles.
+        </p>
+        <div className="mt-4 space-y-4">
           {categories.map((category) => (
             <div
               key={category.id}
-              className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3"
+              className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-4"
             >
-              <p className="font-medium">{category.name}</p>
-              <p className="text-xs text-muted-foreground">
-                /notes/{category.slug} · {category.published ? "Published" : "Draft"}
-              </p>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="font-medium">{category.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    /notes/{category.slug} · {category.published ? "Published" : "Draft"} ·{" "}
+                    {category.topicCount ?? category.topics?.length ?? 0} topics
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                  disabled={isSubmitting === `delete-category-${category.id}`}
+                  onClick={() => {
+                    if (!confirmDelete(`category "${category.name}" and all its topics`)) {
+                      return;
+                    }
+                    submit(`delete-category-${category.id}`, () =>
+                      notesApi.deleteCategory(category.id),
+                    );
+                  }}
+                >
+                  {isSubmitting === `delete-category-${category.id}` ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="size-4" />
+                  )}
+                  Delete category
+                </Button>
+              </div>
+
+              {(category.topics ?? []).length > 0 && (
+                <ul className="mt-4 space-y-2 border-t border-white/[0.06] pt-4">
+                  {category.topics?.map((topic) => (
+                    <li
+                      key={topic.id}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-white/[0.02] px-3 py-2"
+                    >
+                      <div>
+                        <p className="text-sm font-medium">{topic.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {topic.slug} · {topic.published ? "Published" : "Draft"}
+                          {topic.openForAuthors ? " · Open for authors" : ""}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        disabled={isSubmitting === `delete-topic-${topic.id}`}
+                        onClick={() => {
+                          if (!confirmDelete(`topic "${topic.name}" and its articles`)) {
+                            return;
+                          }
+                          submit(`delete-topic-${topic.id}`, () =>
+                            notesApi.deleteTopic(topic.id),
+                          );
+                        }}
+                      >
+                        {isSubmitting === `delete-topic-${topic.id}` ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="size-4" />
+                        )}
+                        Delete topic
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           ))}
+          {categories.length === 0 && (
+            <p className="text-sm text-muted-foreground">No categories yet.</p>
+          )}
         </div>
       </section>
     </div>

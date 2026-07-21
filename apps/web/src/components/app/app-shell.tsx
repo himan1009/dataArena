@@ -1,8 +1,8 @@
 import type { AuthUser } from "@/lib/api";
 
 import { MeshBackground } from "@/components/ui/mesh-background";
-import { PageContainer } from "@/components/ui/page-container";
 import { AppHeader } from "./app-header";
+import { AppMain } from "./app-main";
 import { AppSidebar, SIDEBAR_WIDTH } from "./app-sidebar";
 
 export function AppShell({
@@ -22,9 +22,7 @@ export function AppShell({
 
       <div className={`relative flex min-w-0 flex-1 flex-col lg:pl-[18rem]`}>
         <AppHeader user={user} />
-        <main className="flex-1 py-7 sm:py-10">
-          <PageContainer>{children}</PageContainer>
-        </main>
+        <AppMain>{children}</AppMain>
       </div>
     </div>
   );

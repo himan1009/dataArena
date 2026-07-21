@@ -5,6 +5,7 @@ import {
   Features,
   Footer,
   Hero,
+  LegalNotice,
   Navbar,
   Principles,
   Roadmap,
@@ -23,6 +24,7 @@ export default async function HomePage() {
         <Principles />
         <Roadmap />
         <CTA user={user} />
+        <LegalNotice />
       </main>
       <Footer user={user} />
     </>

@@ -7,7 +7,7 @@ export function PageContainer({
 }: {
   children: React.ReactNode;
   className?: string;
-  size?: "default" | "narrow" | "wide";
+  size?: "default" | "narrow" | "wide" | "editor" | "article";
 }) {
   return (
     <div
@@ -16,6 +16,8 @@ export function PageContainer({
         size === "default" && "max-w-6xl",
         size === "narrow" && "max-w-3xl",
         size === "wide" && "max-w-7xl",
+        size === "editor" && "max-w-[1600px]",
+        size === "article" && "max-w-none",
         className,
       )}
     >

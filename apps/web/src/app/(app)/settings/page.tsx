@@ -1,4 +1,5 @@
-import { Settings, User } from "lucide-react";
+import Link from "next/link";
+import { Bug, Mail, Settings, User } from "lucide-react";
 
 import { LinkedinProfileForm } from "@/components/author/linkedin-profile-form";
 import { Badge } from "@/components/ui/badge";
@@ -66,10 +67,27 @@ export default async function SettingsPage() {
         </section>
       )}
 
-      <section className="glass-panel border-dashed border-white/[0.08] p-7 text-center">
-        <p className="text-sm text-muted-foreground">
-          Password change, email verification, and notifications — coming soon
+      <section className="glass-panel p-7 sm:p-8">
+        <h3 className="text-lg font-semibold tracking-tight">Help & feedback</h3>
+        <p className="mt-2 text-[15px] leading-7 text-muted-foreground">
+          Contact the team or report a problem you found in the app.
         </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link
+            href="/contact"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-medium hover:bg-white/[0.06]"
+          >
+            <Mail className="size-4 text-primary" />
+            Contact us
+          </Link>
+          <Link
+            href="/report-bug"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-medium hover:bg-white/[0.06]"
+          >
+            <Bug className="size-4 text-primary" />
+            Report a bug
+          </Link>
+        </div>
       </section>
     </div>
   );

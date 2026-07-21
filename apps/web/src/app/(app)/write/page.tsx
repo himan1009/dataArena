@@ -50,7 +50,7 @@ export default async function WritePage() {
         <PageHeader
           label="Author workspace"
           title="Write articles"
-          description="Pick an admin-prepared topic, write in markdown, preview, and submit for review."
+          description="Pick a topic, write with the visual editor, and submit for admin review."
         />
       </div>
 
@@ -66,7 +66,8 @@ export default async function WritePage() {
 
       <AuthorWorkspace
         topics={topicsData?.topics ?? []}
-        articles={articlesData?.articles ?? []}
+        writtenBy={articlesData?.writtenBy ?? []}
+        editedBy={articlesData?.editedBy ?? []}
       />
     </div>
   );

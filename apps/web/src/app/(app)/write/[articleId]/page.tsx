@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 
 import { ArticleEditor } from "@/components/author/article-editor";
-import { PageHeader } from "@/components/ui/section-header";
 import { requireUser } from "@/lib/auth-server";
 import { getBackendUrl } from "@/lib/proxy";
 
@@ -11,7 +10,33 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps) {
   const { articleId } = await params;
-  return { title: `Edit article ${articleId}` };
+
+  try {
+    const user = await requireUser();
+    if (user.role !== "EDITOR" && user.role !== "ADMIN") {
+      return { title: "Write" };
+    }
+
+    const cookieStore = await import("next/headers").then((mod) => mod.cookies());
+    const cookieHeader = cookieStore
+      .getAll()
+      .map((cookie) => `${cookie.name}=${cookie.value}`)
+      .join("; ");
+
+    const response = await fetch(getBackendUrl(`/notes/author/articles/${articleId}`), {
+      headers: { cookie: cookieHeader },
+      cache: "no-store",
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return { title: `Edit: ${data.article.title}` };
+    }
+  } catch {
+    // fall through
+  }
+
+  return { title: "Edit article" };
 }
 
 export default async function WriteArticlePage({ params }: PageProps) {
@@ -43,10 +68,5 @@ export default async function WriteArticlePage({ params }: PageProps) {
 
   const data = await response.json();
 
-  return (
-    <div className="space-y-8">
-      <PageHeader label="Editor" title={data.article.title} />
-      <ArticleEditor article={data.article} />
-    </div>
-  );
+  return <ArticleEditor article={data.article} />;
 }

@@ -3,23 +3,28 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Loader2, PenLine } from "lucide-react";
+import { Eye, Loader2, PenLine, PencilLine, Trash2 } from "lucide-react";
 
 import { ArticleStatusBadge } from "@/components/notes/article-status-badge";
+import { RequestEditPanel } from "@/components/author/request-edit-panel";
 import { Button } from "@/components/ui/button";
 import { ApiError, notesApi, type AvailableTopic, type MyArticle } from "@/lib/notes-api";
 import { slugify } from "@/lib/notes-utils";
 
 export function AuthorWorkspace({
   topics,
-  articles,
+  writtenBy,
+  editedBy,
 }: {
   topics: AvailableTopic[];
-  articles: MyArticle[];
+  writtenBy: MyArticle[];
+  editedBy: MyArticle[];
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [startingTopicId, setStartingTopicId] = useState<string | null>(null);
+  const [requestingArticleId, setRequestingArticleId] = useState<string | null>(null);
+  const [deletingArticleId, setDeletingArticleId] = useState<string | null>(null);
 
   const startWriting = async (topic: AvailableTopic) => {
     setError(null);
@@ -43,6 +48,144 @@ export function AuthorWorkspace({
       setStartingTopicId(null);
     }
   };
+
+  const deleteDraft = async (article: MyArticle) => {
+    if (
+      !window.confirm(
+        `Delete draft "${article.title}"? This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+
+    setError(null);
+    setDeletingArticleId(article.id);
+
+    try {
+      await notesApi.deleteAuthorArticle(article.id);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not delete draft");
+    } finally {
+      setDeletingArticleId(null);
+    }
+  };
+
+  const renderArticleActions = (article: MyArticle, section: "written" | "edited") => {
+    const canEdit = article.canEdit ?? (article.status === "DRAFT" || article.status === "CHANGES_REQUESTED");
+    const canRequestEdit =
+      section === "written" &&
+      (article.status === "SUBMITTED" || article.status === "PUBLISHED") &&
+      !article.editRequestedAt;
+    const editPending = Boolean(article.editRequestedAt);
+
+    return (
+      <div className="flex flex-wrap gap-2">
+        {canEdit && (
+          <Link href={`/write/${article.id}`}>
+            <Button size="sm" variant="outline" className="border-white/10 bg-white/[0.03]">
+              <PenLine className="size-4" />
+              {section === "edited" ? "Continue editing" : "Continue writing"}
+            </Button>
+          </Link>
+        )}
+        {!canEdit && (
+          <Link href={`/write/${article.id}`}>
+            <Button size="sm" variant="outline" className="border-white/10 bg-white/[0.03]">
+              <Eye className="size-4" />
+              View article
+            </Button>
+          </Link>
+        )}
+        {canRequestEdit && (
+          <Button
+            size="sm"
+            onClick={() =>
+              setRequestingArticleId(
+                requestingArticleId === article.id ? null : article.id,
+              )
+            }
+          >
+            <PencilLine className="size-4" />
+            Request edits
+          </Button>
+        )}
+        {editPending && (
+          <span className="inline-flex items-center rounded-full bg-violet/15 px-3 py-1 text-xs font-medium text-violet">
+            Edit request pending
+          </span>
+        )}
+        {section === "written" && article.status === "DRAFT" && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-destructive/30 text-destructive hover:bg-destructive/10"
+            disabled={deletingArticleId === article.id}
+            onClick={() => deleteDraft(article)}
+          >
+            {deletingArticleId === article.id ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Trash2 className="size-4" />
+            )}
+            Delete draft
+          </Button>
+        )}
+      </div>
+    );
+  };
+
+  const renderArticleCard = (article: MyArticle, section: "written" | "edited") => (
+    <div key={article.id} className="space-y-4">
+      <div className="glass-panel flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h4 className="font-semibold">{article.title}</h4>
+            <ArticleStatusBadge status={article.status} />
+            {article.isAssignedToMe && (
+              <span className="rounded-full bg-teal/15 px-2.5 py-0.5 text-xs font-medium text-teal">
+                Active assignment
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {article.topic.category.name} · {article.topic.name}
+          </p>
+          {section === "edited" && article.author && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Written by{" "}
+              <span className="font-medium text-foreground">
+                {article.author.name || article.author.email.split("@")[0]}
+              </span>
+            </p>
+          )}
+          {article.reviewComment && (
+            <p className="mt-2 text-sm text-orange-300">
+              Admin feedback: {article.reviewComment}
+            </p>
+          )}
+          {section === "written" && article.editRequestedAt && article.editRequestNote && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Edit request: {article.editRequestNote}
+            </p>
+          )}
+        </div>
+        {renderArticleActions(article, section)}
+      </div>
+
+      {section === "written" && requestingArticleId === article.id && (
+        <RequestEditPanel
+          articleId={article.id}
+          articleTitle={article.title}
+          onCancel={() => setRequestingArticleId(null)}
+          onSuccess={() => {
+            setRequestingArticleId(null);
+            router.refresh();
+          }}
+        />
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-10">
@@ -92,39 +235,44 @@ export function AuthorWorkspace({
       </section>
 
       <section>
-        <h3 className="text-lg font-semibold tracking-tight">My articles</h3>
+        <h3 className="text-lg font-semibold tracking-tight">
+          Written by you
+          {writtenBy.length > 0 && (
+            <span className="ml-2 text-sm font-normal text-muted-foreground">
+              ({writtenBy.length})
+            </span>
+          )}
+        </h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Articles you originally wrote. If you edit your own article later, it stays here.
+        </p>
         <div className="mt-5 space-y-3">
-          {articles.map((article) => (
-            <div
-              key={article.id}
-              className="glass-panel flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="font-semibold">{article.title}</h4>
-                  <ArticleStatusBadge status={article.status} />
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {article.topic.category.name} · {article.topic.name}
-                </p>
-                {article.reviewComment && (
-                  <p className="mt-2 text-sm text-orange-300">
-                    Admin feedback: {article.reviewComment}
-                  </p>
-                )}
-              </div>
-              {(article.status === "DRAFT" || article.status === "CHANGES_REQUESTED") && (
-                <Link href={`/write/${article.id}`}>
-                  <Button size="sm" variant="outline" className="border-white/10 bg-white/[0.03]">
-                    Continue editing
-                  </Button>
-                </Link>
-              )}
-            </div>
-          ))}
-          {articles.length === 0 && (
+          {writtenBy.map((article) => renderArticleCard(article, "written"))}
+          {writtenBy.length === 0 && (
             <div className="glass-panel p-6 text-sm text-muted-foreground">
               You have not started any articles yet.
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section>
+        <h3 className="text-lg font-semibold tracking-tight">
+          Edited by you
+          {editedBy.length > 0 && (
+            <span className="ml-2 text-sm font-normal text-muted-foreground">
+              ({editedBy.length})
+            </span>
+          )}
+        </h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Articles written by someone else that you were assigned to edit or have already edited.
+        </p>
+        <div className="mt-5 space-y-3">
+          {editedBy.map((article) => renderArticleCard(article, "edited"))}
+          {editedBy.length === 0 && (
+            <div className="glass-panel p-6 text-sm text-muted-foreground">
+              No team edit assignments yet. Admin can assign you from a published article.
             </div>
           )}
         </div>
