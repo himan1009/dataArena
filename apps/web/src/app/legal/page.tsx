@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FileText, Scale } from "lucide-react";
 
 import { MarketingPageShell } from "@/components/legal/marketing-page-shell";
+import { PageIntro } from "@/components/ui/page-intro";
 import { legalPages } from "@/lib/legal-content";
 
 export const metadata = {
@@ -13,24 +14,14 @@ export default function LegalIndexPage() {
   return (
     <MarketingPageShell>
       <div className="mx-auto max-w-3xl">
-        <div className="mb-10 flex items-start gap-4">
-          <div className="flex size-12 items-center justify-center rounded-xl border border-border bg-white/[0.03]">
-            <Scale className="size-5 text-primary" />
-          </div>
-          <div>
-            <p className="section-label">Legal</p>
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              Policies & legal information
-            </h1>
-            <p className="mt-4 max-w-3xl text-[15px] leading-8 text-muted-foreground">
-              These documents explain how DataArena handles personal data, platform rules,
-              educational disclaimers, copyright and attribution, security practices, and
-              cookies. They are written specifically for this platform — including author
-              publishing, editor workflows, admin review, and support channels — not as
-              generic placeholder text.
-            </p>
-          </div>
-        </div>
+        <PageIntro
+          icon={Scale}
+          label="Legal"
+          title="Policies & legal information"
+          headingLevel="h1"
+          description="These documents explain how DataArena handles personal data, platform rules, educational disclaimers, copyright and attribution, security practices, and cookies."
+          className="mb-10"
+        />
 
         <div className="grid gap-4 sm:grid-cols-2">
           {legalPages.map((page) => (

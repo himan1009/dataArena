@@ -1,6 +1,6 @@
 import { Code2 } from "lucide-react";
 
-import { ComingSoon } from "@/components/app/coming-soon";
+import { ComingSoonPage } from "@/components/app/coming-soon-page";
 
 export const metadata = {
   title: "Practice",
@@ -8,9 +8,9 @@ export const metadata = {
 
 export default function PracticePage() {
   return (
-    <ComingSoon
+    <ComingSoonPage
       icon={Code2}
-      title="Practice Engine"
+      title="Practice"
       description="Hands-on SQL, Python, and PySpark exercises built for real data engineering workflows."
       features={[
         "SQL lab with sample datasets",

@@ -1,6 +1,7 @@
-import { getCurrentUser } from "@/lib/auth-server";
 import { BugReportForm } from "@/components/feedback/bug-report-form";
 import { SupportPageShell } from "@/components/feedback/support-page-shell";
+import { PageIntro } from "@/components/ui/page-intro";
+import { getCurrentUser } from "@/lib/auth-server";
 import { Bug } from "lucide-react";
 
 export const metadata = {
@@ -14,19 +15,13 @@ export default async function ReportBugPage() {
   return (
     <SupportPageShell user={user}>
       <div className="mx-auto max-w-2xl space-y-8">
-        <div className="flex items-start gap-4">
-          <div className="flex size-12 items-center justify-center rounded-xl border border-border bg-white/[0.03]">
-            <Bug className="size-5 text-primary" />
-          </div>
-          <div>
-            <p className="section-label">Bug report</p>
-            <h1 className="text-3xl font-semibold tracking-tight">Report a problem</h1>
-            <p className="mt-2 max-w-xl text-muted-foreground">
-              Found something broken? Tell us which part of the app and what happened.
-              We use this to fix issues faster.
-            </p>
-          </div>
-        </div>
+        <PageIntro
+          icon={Bug}
+          label="Bug report"
+          title="Report a problem"
+          headingLevel={user ? "h2" : "h1"}
+          description="Found something broken? Tell us which part of the app and what happened. We use this to fix issues faster."
+        />
 
         <div className="glass-panel p-6 sm:p-8">
           <BugReportForm

@@ -34,13 +34,18 @@ const authorSelect = {
   linkedinUrl: true,
 } as const;
 
+const publicAuthorSelect = {
+  id: true,
+  name: true,
+  linkedinUrl: true,
+} as const;
+
 function mapPublishedAuthor(article: {
   authorNameSnapshot: string | null;
   authorLinkedinSnapshot: string | null;
   author: {
     id: string;
     name: string | null;
-    email: string;
     linkedinUrl: string | null;
   } | null;
 }) {
@@ -48,7 +53,6 @@ function mapPublishedAuthor(article: {
     return {
       id: article.author?.id ?? 'legacy',
       name: article.authorNameSnapshot,
-      email: article.author?.email ?? '',
       linkedinUrl: article.authorLinkedinSnapshot,
     };
   }
@@ -140,11 +144,7 @@ export class NotesService {
       select: { name: true, email: true },
     });
 
-    return (
-      editor?.name?.trim() ||
-      editor?.email.split('@')[0] ||
-      'Editor'
-    );
+    return editor?.name?.trim() || editor?.email.split('@')[0] || 'Editor';
   }
 
   async listAuthorEditors() {
@@ -276,7 +276,7 @@ export class NotesService {
             sortOrder: true,
             updatedAt: true,
             publishedAt: true,
-            author: { select: authorSelect },
+            author: { select: publicAuthorSelect },
           },
         },
       },
@@ -321,8 +321,8 @@ export class NotesService {
         },
       },
       include: {
-        author: { select: authorSelect },
-        lastEditedBy: { select: authorSelect },
+        author: { select: publicAuthorSelect },
+        lastEditedBy: { select: publicAuthorSelect },
         topic: {
           include: {
             category: true,
@@ -362,15 +362,13 @@ export class NotesService {
               name:
                 article.lastEditorNameSnapshot ||
                 article.lastEditedBy.name ||
-                article.lastEditedBy.email.split('@')[0],
-              email: article.lastEditedBy.email,
+                'Editor',
               linkedinUrl: article.lastEditedBy.linkedinUrl,
             }
           : article.lastEditorNameSnapshot
             ? {
                 id: 'editor-snapshot',
                 name: article.lastEditorNameSnapshot,
-                email: '',
                 linkedinUrl: null,
               }
             : null,
@@ -572,43 +570,35 @@ export class NotesService {
   }
 
   async createAuthorArticle(authorId: string, dto: CreateAuthorArticleDto) {
-    const topic = await this.prisma.topic.findUnique({
-      where: { id: dto.topicId },
-      include: {
-        articles: {
-          where: {
-            status: {
-              in: [
-                ArticleStatus.DRAFT,
-                ArticleStatus.SUBMITTED,
-                ArticleStatus.CHANGES_REQUESTED,
-                ArticleStatus.PUBLISHED,
-              ],
+    const article = await this.prisma.$transaction(async (tx) => {
+      const topic = await tx.topic.findUnique({
+        where: { id: dto.topicId },
+        include: {
+          articles: {
+            where: {
+              status: {
+                not: ArticleStatus.REJECTED,
+              },
             },
           },
         },
-      },
-    });
+      });
 
-    if (!topic || !topic.openForAuthors) {
-      throw new NotFoundException('Topic not available for writing');
-    }
+      if (!topic || !topic.openForAuthors) {
+        throw new NotFoundException('Topic not available for writing');
+      }
 
-    if (topic.claimedById && topic.claimedById !== authorId) {
-      throw new ForbiddenException('This topic is already claimed by another author');
-    }
+      if (topic.claimedById && topic.claimedById !== authorId) {
+        throw new ForbiddenException(
+          'This topic is already claimed by another author',
+        );
+      }
 
-    const blockingArticle = topic.articles.find(
-      (article) =>
-        article.authorId !== authorId &&
-        article.status !== ArticleStatus.REJECTED,
-    );
+      const activeArticle = topic.articles[0];
+      if (activeArticle) {
+        throw new ConflictException('This topic already has an active article');
+      }
 
-    if (blockingArticle) {
-      throw new ConflictException('This topic already has an active article');
-    }
-
-    const article = await this.prisma.$transaction(async (tx) => {
       await tx.topic.update({
         where: { id: topic.id },
         data: {
@@ -646,7 +636,9 @@ export class NotesService {
     }
 
     if (!this.canUserEditArticle(article, userId)) {
-      throw new ForbiddenException('You do not have permission to edit this article');
+      throw new ForbiddenException(
+        'You do not have permission to edit this article',
+      );
     }
 
     const data: Prisma.ArticleUpdateInput = { ...dto };
@@ -678,7 +670,9 @@ export class NotesService {
     }
 
     if (!this.canUserEditArticle(article, userId)) {
-      throw new ForbiddenException('Only drafts or revision requests can be submitted');
+      throw new ForbiddenException(
+        'Only drafts or revision requests can be submitted',
+      );
     }
 
     const isAssignedRevision =
@@ -702,11 +696,7 @@ export class NotesService {
     return { article: updated, message: 'Article submitted for review' };
   }
 
-  async deleteAuthorArticle(
-    articleId: string,
-    userId: string,
-    userRole: Role,
-  ) {
+  async deleteAuthorArticle(articleId: string, userId: string, userRole: Role) {
     const article = await this.prisma.article.findFirst({
       where:
         userRole === Role.ADMIN
@@ -775,7 +765,9 @@ export class NotesService {
 
     const note = dto.note?.trim();
     if (!note) {
-      throw new BadRequestException('A comment is required when requesting edits');
+      throw new BadRequestException(
+        'A comment is required when requesting edits',
+      );
     }
 
     const updated = await this.prisma.article.update({
@@ -855,6 +847,7 @@ export class NotesService {
             'Edit access granted. Update the article and submit again for review.',
           editRequestedAt: null,
           editRequestNote: null,
+          editRequestedById: null,
           editAssigneeId: assigneeId,
         },
       });
@@ -995,7 +988,8 @@ export class NotesService {
             authorNameSnapshot:
               article.authorNameSnapshot ?? snapshots.authorNameSnapshot,
             authorLinkedinSnapshot:
-              article.authorLinkedinSnapshot ?? snapshots.authorLinkedinSnapshot,
+              article.authorLinkedinSnapshot ??
+              snapshots.authorLinkedinSnapshot,
           },
         });
 
@@ -1012,7 +1006,9 @@ export class NotesService {
 
     if (dto.action === ReviewAction.REQUEST_CHANGES) {
       if (!dto.comment?.trim()) {
-        throw new BadRequestException('Comment is required when requesting changes');
+        throw new BadRequestException(
+          'Comment is required when requesting changes',
+        );
       }
 
       const updated = await this.prisma.article.update({
@@ -1092,9 +1088,35 @@ export class NotesService {
   }
 
   deleteCategory(id: string) {
-    return this.prisma.category
-      .delete({ where: { id } })
-      .catch(this.handleNotFound('Category not found'));
+    return this.prisma.$transaction(async (tx) => {
+      const category = await tx.category.findUnique({
+        where: { id },
+        select: { id: true, name: true },
+      });
+
+      if (!category) {
+        throw new NotFoundException('Category not found');
+      }
+
+      const topics = await tx.topic.findMany({
+        where: { categoryId: id },
+        select: { id: true },
+      });
+      const topicIds = topics.map((topic) => topic.id);
+
+      if (topicIds.length > 0) {
+        await tx.article.deleteMany({
+          where: { topicId: { in: topicIds } },
+        });
+        await tx.topic.deleteMany({
+          where: { categoryId: id },
+        });
+      }
+
+      await tx.category.delete({ where: { id } });
+
+      return { success: true, category };
+    });
   }
 
   createTopic(dto: CreateTopicDto) {
@@ -1115,9 +1137,21 @@ export class NotesService {
   }
 
   deleteTopic(id: string) {
-    return this.prisma.topic
-      .delete({ where: { id } })
-      .catch(this.handleNotFound('Topic not found'));
+    return this.prisma.$transaction(async (tx) => {
+      const topic = await tx.topic.findUnique({
+        where: { id },
+        select: { id: true, name: true },
+      });
+
+      if (!topic) {
+        throw new NotFoundException('Topic not found');
+      }
+
+      await tx.article.deleteMany({ where: { topicId: id } });
+      await tx.topic.delete({ where: { id } });
+
+      return { success: true, topic };
+    });
   }
 
   async createArticle(dto: CreateArticleDto) {
@@ -1194,7 +1228,9 @@ export class NotesService {
       }
     } else if (
       existing.status === ArticleStatus.PUBLISHED &&
-      (dto.title !== undefined || dto.slug !== undefined || dto.content !== undefined)
+      (dto.title !== undefined ||
+        dto.slug !== undefined ||
+        dto.content !== undefined)
     ) {
       data.status = ArticleStatus.PUBLISHED;
       data.published = true;
@@ -1219,7 +1255,10 @@ export class NotesService {
       await tx.article.delete({ where: { id } });
 
       const remaining = await tx.article.count({
-        where: { topicId: article.topicId, status: { not: ArticleStatus.REJECTED } },
+        where: {
+          topicId: article.topicId,
+          status: { not: ArticleStatus.REJECTED },
+        },
       });
 
       if (remaining === 0) {

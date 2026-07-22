@@ -4,17 +4,23 @@ AI-powered learning and practice platform for Data Engineers.
 
 ## Current Status
 
-**Phase 1 — Foundation**
+**Phase 1 — Foundation (in progress)**
 
 - [x] Landing page
-- [x] Authentication (register, login, logout, refresh)
-- [ ] Notes & topics
-- [ ] Search
+- [x] Authentication (register, login, logout, refresh, profile)
+- [x] Post-login app shell (sidebar, dashboard, settings)
+- [x] Notes & topics (public reading, categories, articles)
+- [x] Author workflow (write, submit, review, edit requests)
+- [x] Admin CMS (categories, topics, articles, users, inbox)
+- [x] Writing standards (viewer + admin editor with live preview)
+- [x] Contact & bug report forms
+- [ ] Search (Meilisearch — planned)
 
 ## Tech Stack
 
 - **Frontend:** Next.js, React, TypeScript, Tailwind CSS, shadcn/ui
-- **Backend:** NestJS, Prisma, PostgreSQL, Redis
+- **Backend:** NestJS, Prisma, PostgreSQL
+- **Infra (local):** Docker Compose for PostgreSQL + Redis (Redis reserved for future use)
 
 ## Project Structure
 
@@ -37,6 +43,7 @@ All docs are in the [`docs/`](./docs/) folder:
 | File | What it contains |
 |------|------------------|
 | [docs/SETUP_AND_RUN.md](./docs/SETUP_AND_RUN.md) | **Detailed setup & run guide** (first time + daily start) |
+| [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | **Production deployment** (Vercel + Render + Neon free tier) |
 | [docs/DEVELOPMENT_LOG.md](./docs/DEVELOPMENT_LOG.md) | Versioned history of everything built (updated after each milestone) |
 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Full product, technical, and functional architecture |
 | [docs/DataArena_Product_Documentation_v1.md](./docs/DataArena_Product_Documentation_v1.md) | Your original product vision document |

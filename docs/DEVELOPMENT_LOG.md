@@ -378,7 +378,44 @@ cd apps/api && npx prisma migrate deploy
 
 ---
 
-### Version 0.7 — Search
+## Version 0.6.3 — Writing Standards, UI Polish & Stability Fixes
+
+**Date:** July 2026  
+**Status:** Complete
+
+### What was built
+- **Writing standards** module (`/write/standards`, `/admin/standards`)
+  - Public viewer with Mandatory / Essential tabs
+  - Admin split editor with synced markdown + live preview scroll
+  - API: `GET/PUT /standards/:key` with Prisma `WritingStandard` model
+- **Page infrastructure** — `AppPage`, `PageIntro`, role guards (`requireAdmin`, `requireEditor`)
+- **Admin UX** — category/topic dropdown management with delete, custom selects, global loading feedback
+- **Contact & bug reports** — public forms + admin inbox at `/admin/inbox`
+
+### Bug fixes (frontend)
+- Server-side token refresh now applies `Set-Cookie` to the browser (`auth-server.ts`)
+- Client API calls retry after `/api/auth/refresh` on 401 (`fetch-client.ts`)
+- Login respects middleware `?from=` redirect
+- Server fetches throw `ServerFetchError` instead of silently returning empty data
+- Admin inbox shows errors on failed archive actions
+- Author workspace hides “Request edits” when article is already assigned
+
+### Bug fixes (backend)
+- Writing standards `ensureDefaults()` no longer overwrites admin-edited content
+- Public notes API no longer exposes author/editor emails
+- Topic article creation is transactional and blocks duplicate active articles per topic
+- Article content max length validation (500k chars)
+- Edit request approval clears `editRequestedById`
+- Secure cookies default on in production
+- Removed duplicate `UpdateProfileDto` from `author.dto.ts`
+- LinkedIn URL can be cleared via profile update (`""` accepted)
+- Bug report `pageUrl` validated as http/https URL
+
+### Deployment docs
+- Added `docs/DEPLOYMENT.md` (Vercel + Render + Neon free tier)
+
+---
+
 - Meilisearch integration
 - Unified search across notes and topics
 
@@ -416,6 +453,7 @@ cd apps/api && npx prisma migrate deploy
 | 0.6 | Notes & topics (database) | Done |
 | 0.6.1 | Author workflow & review system | Done |
 | 0.6.2 | Admin user management & permanent credits | Done |
+| 0.6.3 | Writing standards, UI polish & stability fixes | Done |
 | 0.7 | Search | Planned |
 | 0.8 | Bookmarks & progress | Planned |
 | 0.9 | AI copilot | Planned |

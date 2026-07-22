@@ -1,11 +1,11 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUrl, ValidateIf } from 'class-validator';
-
-export class UpdateProfileDto {
-  @IsOptional()
-  @IsString()
-  @IsUrl({}, { message: 'LinkedIn URL must be a valid URL' })
-  linkedinUrl?: string;
-}
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  ValidateIf,
+} from 'class-validator';
 
 export class CreateAuthorArticleDto {
   @IsString()
@@ -14,14 +14,17 @@ export class CreateAuthorArticleDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   title!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   slug!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(500000)
   content!: string;
 }
 
@@ -29,15 +32,18 @@ export class UpdateAuthorArticleDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   title?: string;
 
   @IsOptional()
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   slug?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(500000)
   content?: string;
 }
 
@@ -53,6 +59,7 @@ export class ReviewArticleDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(5000)
   comment?: string;
 }
 
@@ -64,6 +71,7 @@ export enum EditRequestReviewAction {
 export class RequestEditAccessDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(5000)
   note!: string;
 }
 
@@ -73,9 +81,13 @@ export class ReviewEditRequestDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(5000)
   comment?: string;
 
-  @ValidateIf((dto) => dto.action === EditRequestReviewAction.APPROVE)
+  @ValidateIf(
+    (dto: ReviewEditRequestDto) =>
+      dto.action === EditRequestReviewAction.APPROVE,
+  )
   @IsString()
   @IsNotEmpty()
   assigneeId?: string;
@@ -88,5 +100,6 @@ export class AssignEditorDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(5000)
   comment?: string;
 }

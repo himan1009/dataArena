@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,8 +17,17 @@ import { Label } from "@/components/ui/label";
 import { ApiError, authApi } from "@/lib/api";
 import { type LoginFormValues, loginSchema } from "@/lib/auth-schemas";
 
+function getSafeRedirectPath(from: string | null) {
+  if (!from || !from.startsWith("/") || from.startsWith("//")) {
+    return "/dashboard";
+  }
+
+  return from;
+}
+
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -34,7 +43,7 @@ export function LoginForm() {
 
     try {
       await authApi.login(values);
-      router.push("/dashboard");
+      router.push(getSafeRedirectPath(searchParams.get("from")));
       router.refresh();
     } catch (err) {
       if (err instanceof ApiError) {

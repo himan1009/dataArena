@@ -1,6 +1,6 @@
 import { Bookmark } from "lucide-react";
 
-import { ComingSoon } from "@/components/app/coming-soon";
+import { ComingSoonPage } from "@/components/app/coming-soon-page";
 
 export const metadata = {
   title: "Bookmarks",
@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function BookmarksPage() {
   return (
-    <ComingSoon
+    <ComingSoonPage
       icon={Bookmark}
       title="Bookmarks"
       description="Save topics and articles to revisit later. Pick up exactly where you left off."

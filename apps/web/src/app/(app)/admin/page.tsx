@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { Shield, ClipboardCheck, Users, BookOpen, Inbox } from "lucide-react";
+import { Shield, ClipboardCheck, Users, BookOpen, Inbox, BookOpenCheck } from "lucide-react";
 
 import { AdminNotesPanel } from "@/components/admin/admin-notes-panel";
+import { AppPage } from "@/components/ui/app-page";
 import { IconBox } from "@/components/ui/icon-box";
-import { PageHeader } from "@/components/ui/section-header";
+import { PageIntro } from "@/components/ui/page-intro";
 import { buttonVariants } from "@/components/ui/button";
-import { requireUser } from "@/lib/auth-server";
+import { requireAdmin } from "@/lib/auth-server";
 import { getAdminCategories } from "@/lib/notes-server";
-import { redirect } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 export const metadata = {
@@ -16,7 +16,7 @@ export const metadata = {
 
 const adminLinks = [
   {
-    title: "Review queue",
+    title: "Reviews",
     description: "Approve submissions, assign editors for edit requests, and publish articles.",
     href: "/admin/reviews",
     icon: ClipboardCheck,
@@ -34,7 +34,13 @@ const adminLinks = [
     icon: Inbox,
   },
   {
-    title: "User management",
+    title: "Writing standards",
+    description: "Edit the mandatory article checkpoints and essential writing guidelines for all editors.",
+    href: "/admin/standards",
+    icon: BookOpenCheck,
+  },
+  {
+    title: "Users",
     description: "Assign editor roles, demote users, and manage account access.",
     href: "/admin/users",
     icon: Users,
@@ -42,24 +48,17 @@ const adminLinks = [
 ];
 
 export default async function AdminPage() {
-  const user = await requireUser();
-
-  if (user.role !== "ADMIN") {
-    redirect("/dashboard");
-  }
-
+  await requireAdmin();
   const categories = await getAdminCategories();
 
   return (
-    <div className="space-y-12 sm:space-y-14">
-      <div className="flex items-start gap-5">
-        <IconBox icon={Shield} size="lg" className="hidden sm:flex" />
-        <PageHeader
-          label="Admin CMS"
-          title="Content management"
-          description="Create categories, topics, and markdown articles for the Knowledge Engine."
-        />
-      </div>
+    <AppPage>
+      <PageIntro
+        icon={Shield}
+        label="Admin CMS"
+        title="Content management"
+        description="Create categories, topics, and markdown articles for the Knowledge Engine."
+      />
 
       <AdminNotesPanel categories={categories} />
 
@@ -80,6 +79,6 @@ export default async function AdminPage() {
           </div>
         ))}
       </section>
-    </div>
+    </AppPage>
   );
 }

@@ -11,6 +11,12 @@ import {
   Roadmap,
 } from "@/components/landing";
 
+export const metadata = {
+  title: "DataArena — Learn data engineering in one workspace",
+  description:
+    "Notes, practice labs, interview prep, and AI for data engineers — in one platform.",
+};
+
 export default async function HomePage() {
   const user = await getCurrentUser();
 

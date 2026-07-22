@@ -8,9 +8,13 @@ export function AppMain({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isArticleEditor = /^\/write\/[^/]+$/.test(pathname);
   const isAdminArticleEditor = /^\/admin\/notes\/[^/]+\/edit$/.test(pathname);
+  const isAdminStandardsEditor = pathname === "/admin/standards";
   const isArticleReader = /^\/notes\/[^/]+\/[^/]+\/[^/]+$/.test(pathname);
+  const isWriteStandards = pathname === "/write/standards";
+  const isEditorLayout =
+    isArticleEditor || isAdminArticleEditor || isAdminStandardsEditor;
 
-  const containerSize = isArticleEditor || isAdminArticleEditor
+  const containerSize = isEditorLayout
     ? "editor"
     : isArticleReader
       ? "article"
@@ -19,21 +23,21 @@ export function AppMain({ children }: { children: React.ReactNode }) {
   return (
     <main
       className={
-        isArticleEditor || isAdminArticleEditor
-          ? "flex min-h-0 flex-1 flex-col py-4 sm:py-5"
-          : isArticleReader
-            ? "flex-1 py-5 sm:py-6"
-            : "flex-1 py-7 sm:py-10"
+        isEditorLayout
+          ? "flex min-h-0 flex-1 flex-col overflow-hidden py-4 sm:py-5 lg:h-[calc(100vh-4.75rem)]"
+          : "flex-1 py-7 sm:py-10"
       }
     >
       <PageContainer
         size={containerSize}
         className={
-          isArticleEditor || isAdminArticleEditor
+          isEditorLayout
             ? "flex min-h-0 flex-1 flex-col px-3 sm:px-5 lg:px-6"
             : isArticleReader
               ? "px-4 sm:px-8 lg:px-10 xl:px-12"
-              : undefined
+              : isWriteStandards
+                ? "max-w-7xl"
+                : undefined
         }
       >
         {children}

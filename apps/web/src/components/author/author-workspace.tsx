@@ -76,7 +76,8 @@ export function AuthorWorkspace({
     const canRequestEdit =
       section === "written" &&
       (article.status === "SUBMITTED" || article.status === "PUBLISHED") &&
-      !article.editRequestedAt;
+      !article.editRequestedAt &&
+      !article.isAssignedToMe;
     const editPending = Boolean(article.editRequestedAt);
 
     return (

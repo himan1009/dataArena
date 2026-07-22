@@ -2,10 +2,13 @@ import Link from "next/link";
 import { Bug, Mail, Settings, User } from "lucide-react";
 
 import { LinkedinProfileForm } from "@/components/author/linkedin-profile-form";
+import { AppPage } from "@/components/ui/app-page";
 import { Badge } from "@/components/ui/badge";
-import { IconBox } from "@/components/ui/icon-box";
-import { PageHeader } from "@/components/ui/section-header";
-import { requireUser } from "@/lib/auth-server";
+import { buttonVariants } from "@/components/ui/button";
+import { PageIntro } from "@/components/ui/page-intro";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { isEditorOrAdmin, requireUser } from "@/lib/auth-server";
+import { cn } from "@/lib/utils";
 
 export const metadata = {
   title: "Settings",
@@ -15,23 +18,18 @@ export default async function SettingsPage() {
   const user = await requireUser();
 
   return (
-    <div className="mx-auto max-w-2xl space-y-10 sm:space-y-12">
-      <div className="flex items-start gap-5">
-        <IconBox icon={Settings} size="lg" className="hidden sm:flex" />
-        <PageHeader
-          label="Account"
-          title="Settings"
-          description="Manage your profile, author details, and account preferences."
-        />
-      </div>
+    <AppPage size="narrow">
+      <PageIntro
+        icon={Settings}
+        label="Account"
+        title="Settings"
+        description="Manage your profile, author details, and account preferences."
+      />
 
       <section className="glass-panel p-7 sm:p-8">
-        <div className="mb-7 flex items-center gap-4">
-          <IconBox icon={User} size="sm" />
-          <h3 className="text-lg font-semibold tracking-tight">Profile</h3>
-        </div>
+        <SectionHeading icon={User} title="Profile" />
 
-        <div className="space-y-0 divide-y divide-white/[0.06]">
+        <div className="mt-7 space-y-0 divide-y divide-white/[0.06]">
           {[
             { label: "Name", value: user.name || "Not set" },
             { label: "Email", value: user.email },
@@ -54,13 +52,12 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      {(user.role === "EDITOR" || user.role === "ADMIN") && (
+      {isEditorOrAdmin(user) && (
         <section className="glass-panel p-7 sm:p-8">
-          <h3 className="text-lg font-semibold tracking-tight">Author profile</h3>
-          <p className="mt-2 text-[15px] leading-7 text-muted-foreground">
-            Your LinkedIn link appears on published article credits — permanently,
-            even if your account status changes later.
-          </p>
+          <SectionHeading
+            title="Author profile"
+            description="Your LinkedIn link appears on published article credits — permanently, even if your account status changes later."
+          />
           <div className="mt-6">
             <LinkedinProfileForm initialUrl={user.linkedinUrl} />
           </div>
@@ -68,27 +65,33 @@ export default async function SettingsPage() {
       )}
 
       <section className="glass-panel p-7 sm:p-8">
-        <h3 className="text-lg font-semibold tracking-tight">Help & feedback</h3>
-        <p className="mt-2 text-[15px] leading-7 text-muted-foreground">
-          Contact the team or report a problem you found in the app.
-        </p>
+        <SectionHeading
+          title="Help & feedback"
+          description="Contact the team or report a problem you found in the app."
+        />
         <div className="mt-5 flex flex-wrap gap-3">
           <Link
             href="/contact"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-medium hover:bg-white/[0.06]"
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "border-white/10 bg-white/[0.03]",
+            )}
           >
             <Mail className="size-4 text-primary" />
             Contact us
           </Link>
           <Link
             href="/report-bug"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-medium hover:bg-white/[0.06]"
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "border-white/10 bg-white/[0.03]",
+            )}
           >
             <Bug className="size-4 text-primary" />
             Report a bug
           </Link>
         </div>
       </section>
-    </div>
+    </AppPage>
   );
 }

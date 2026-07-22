@@ -99,7 +99,11 @@ export class AuthService {
     };
   }
 
-  async logout(userId: string, refreshToken: string | undefined, response: Response) {
+  async logout(
+    userId: string,
+    refreshToken: string | undefined,
+    response: Response,
+  ) {
     if (refreshToken) {
       const tokenHash = hashToken(refreshToken);
       await this.prisma.refreshToken.updateMany({
@@ -214,7 +218,10 @@ export class AuthService {
 
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m') as `${number}${'s' | 'm' | 'h' | 'd'}`,
+      expiresIn: this.configService.get<string>(
+        'JWT_ACCESS_EXPIRES_IN',
+        '15m',
+      ) as `${number}${'s' | 'm' | 'h' | 'd'}`,
     });
 
     const refreshToken = generateRefreshToken();
@@ -233,7 +240,9 @@ export class AuthService {
       },
     });
 
-    const secure = this.configService.get<string>('COOKIE_SECURE') === 'true';
+    const secure =
+      this.configService.get<string>('COOKIE_SECURE') === 'true' ||
+      this.configService.get<string>('NODE_ENV') === 'production';
 
     response.cookie('access_token', accessToken, {
       httpOnly: true,

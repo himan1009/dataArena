@@ -1,7 +1,8 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import { ArticleEditor } from "@/components/author/article-editor";
-import { requireUser } from "@/lib/auth-server";
+import { requireEditor } from "@/lib/auth-server";
+import { getCookieHeader } from "@/lib/auth-server";
 import { getBackendUrl } from "@/lib/proxy";
 
 type PageProps = {
@@ -12,16 +13,8 @@ export async function generateMetadata({ params }: PageProps) {
   const { articleId } = await params;
 
   try {
-    const user = await requireUser();
-    if (user.role !== "EDITOR" && user.role !== "ADMIN") {
-      return { title: "Write" };
-    }
-
-    const cookieStore = await import("next/headers").then((mod) => mod.cookies());
-    const cookieHeader = cookieStore
-      .getAll()
-      .map((cookie) => `${cookie.name}=${cookie.value}`)
-      .join("; ");
+    await requireEditor();
+    const cookieHeader = await getCookieHeader();
 
     const response = await fetch(getBackendUrl(`/notes/author/articles/${articleId}`), {
       headers: { cookie: cookieHeader },
@@ -40,18 +33,10 @@ export async function generateMetadata({ params }: PageProps) {
 }
 
 export default async function WriteArticlePage({ params }: PageProps) {
-  const user = await requireUser();
-
-  if (user.role !== "EDITOR" && user.role !== "ADMIN") {
-    redirect("/dashboard");
-  }
+  await requireEditor();
 
   const { articleId } = await params;
-  const cookieStore = await import("next/headers").then((mod) => mod.cookies());
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((cookie) => `${cookie.name}=${cookie.value}`)
-    .join("; ");
+  const cookieHeader = await getCookieHeader();
 
   const response = await fetch(getBackendUrl(`/notes/author/articles/${articleId}`), {
     headers: { cookie: cookieHeader },

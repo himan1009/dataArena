@@ -6,6 +6,7 @@ import { ExternalLink, Loader2, UserCheck, UserX } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SelectField } from "@/components/ui/select-field";
 import {
   adminUsersApi,
   type AdminUser,
@@ -110,22 +111,23 @@ export function AdminUsersPanel({
                           {roleLabels[user.role]}
                         </Badge>
                       ) : (
-                        <select
-                          className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm outline-none focus-visible:border-primary/40"
+                        <SelectField
+                          className="h-10 min-w-[9rem] py-2 text-sm"
                           value={user.role}
+                          options={[
+                            { value: "USER", label: "User" },
+                            { value: "EDITOR", label: "Editor" },
+                          ]}
                           disabled={isSelf || loadingKey === roleKey}
-                          onChange={(event) =>
+                          onValueChange={(value) =>
                             runAction(roleKey, () =>
                               adminUsersApi.updateRole(
                                 user.id,
-                                event.target.value as "USER" | "EDITOR",
+                                value as "USER" | "EDITOR",
                               ),
                             )
                           }
-                        >
-                          <option value="USER">User</option>
-                          <option value="EDITOR">Editor</option>
-                        </select>
+                        />
                       )}
                     </td>
                     <td className="px-5 py-4">

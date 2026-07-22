@@ -122,7 +122,11 @@ export class NotesController {
     @Param('id') id: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.notesService.deleteAuthorArticle(id, user.id, user.role as Role);
+    return this.notesService.deleteAuthorArticle(
+      id,
+      user.id,
+      user.role as Role,
+    );
   }
 
   @Get('admin/review-queue')
@@ -166,10 +170,7 @@ export class NotesController {
   @Post('admin/articles/:id/assign-editor')
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
-  assignEditor(
-    @Param('id') id: string,
-    @Body() dto: AssignEditorDto,
-  ) {
+  assignEditor(@Param('id') id: string, @Body() dto: AssignEditorDto) {
     return this.notesService.assignEditorToArticle(id, dto);
   }
 

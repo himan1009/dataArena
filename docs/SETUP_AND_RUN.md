@@ -18,6 +18,7 @@
 9. [Environment Files](#9-environment-files)
 10. [Troubleshooting](#10-troubleshooting)
 11. [Quick Reference Cheat Sheet](#11-quick-reference-cheat-sheet)
+12. [Production Deployment](#12-production-deployment)
 
 ---
 
@@ -507,4 +508,10 @@ cd path/to/dataArena && docker compose down
 
 ---
 
-*Last updated: March 2026 — Version 0.4*
+## 12. Production Deployment
+
+For deploying to production (Vercel + Render + Neon free tier), see **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+
+---
+
+*Last updated: July 2026 — Version 0.6.3*

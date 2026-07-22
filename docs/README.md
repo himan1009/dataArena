@@ -5,6 +5,7 @@ All project documentation lives in this folder.
 | Document | Purpose |
 |----------|---------|
 | [SETUP_AND_RUN.md](./SETUP_AND_RUN.md) | **Detailed setup & run guide** — first-time setup, terminals, commands, troubleshooting |
+| [DEPLOYMENT.md](./DEPLOYMENT.md) | **Production deployment** — Vercel + Render + Neon (free tier) |
 | [DataArena_Product_Documentation_v1.md](./DataArena_Product_Documentation_v1.md) | Original product vision and requirements (your source doc) |
 | [DEVELOPMENT_LOG.md](./DEVELOPMENT_LOG.md) | Versioned record of everything built so far (updated after each milestone) |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Full technical, functional, and product architecture (current + future) |

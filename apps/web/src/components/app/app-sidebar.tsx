@@ -77,7 +77,7 @@ export function AppSidebar({
   return (
     <aside
       className={cn(
-        "flex h-full flex-col border-r border-white/[0.07] bg-sidebar/95 backdrop-blur-xl",
+        "flex h-full min-h-0 flex-col overflow-hidden border-r border-white/[0.07] bg-sidebar/95 backdrop-blur-xl",
         SIDEBAR_WIDTH,
         className,
       )}
@@ -86,7 +86,7 @@ export function AppSidebar({
         <Logo showTagline href="/dashboard" />
       </div>
 
-      <ScrollArea className="flex-1 px-4 py-7">
+      <ScrollArea className="min-h-0 flex-1 overscroll-contain px-4 py-7">
         <nav className="space-y-1.5">
           <p className="section-label mb-4 px-3">Learn</p>
           {visibleMain.map((item) => (

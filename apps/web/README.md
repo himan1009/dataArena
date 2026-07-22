@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DataArena Web (`apps/web`)
 
-## Getting Started
+Next.js 16 frontend for DataArena.
 
-First, run the development server:
+## Stack
+
+- Next.js 16 (App Router), React 19, TypeScript
+- Tailwind CSS v4, shadcn/ui, Framer Motion
+- TipTap rich text editor, react-markdown
+
+## Local development
+
+From the **monorepo root**, see [docs/SETUP_AND_RUN.md](../../docs/SETUP_AND_RUN.md).
+
+Quick start (with API + Docker already running):
 
 ```bash
+cd apps/web
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copy `.env.example` to `.env.local`:
 
-## Learn More
+```env
+NEXT_PUBLIC_API_URL="http://localhost:4000"
+```
 
-To learn more about Next.js, take a look at the following resources:
+Server-side fetches also accept `API_URL` (used in production on Vercel).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Key routes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Route | Description |
+|-------|-------------|
+| `/` | Landing page |
+| `/login`, `/register` | Auth |
+| `/dashboard` | Post-login home |
+| `/notes` | Public notes browser |
+| `/write` | Author workspace |
+| `/write/standards` | Writing standards (editors) |
+| `/admin` | Admin CMS |
+| `/admin/standards` | Writing standards editor |
+| `/admin/inbox` | Contact & bug reports |
 
-## Deploy on Vercel
+## API proxy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Browser requests go to Next.js API routes (`/api/auth/*`, `/api/notes/*`, etc.) which proxy to the Nest backend. This keeps httpOnly auth cookies on the frontend origin.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploy
+
+See [docs/DEPLOYMENT.md](../../docs/DEPLOYMENT.md) — recommended: **Vercel** with `API_URL` pointing to the Render API.

@@ -29,26 +29,22 @@ export class FeedbackController {
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('contact')
   submitContact(@Body() dto: CreateContactMessageDto) {
-    return this.feedbackService
-      .createContactMessage(dto)
-      .then((message) => ({
-        message,
-        success: true,
-        confirmation: 'Thanks for reaching out. We will get back to you soon.',
-      }));
+    return this.feedbackService.createContactMessage(dto).then((message) => ({
+      message,
+      success: true,
+      confirmation: 'Thanks for reaching out. We will get back to you soon.',
+    }));
   }
 
   @Public()
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('bugs')
   submitBug(@Body() dto: CreateBugReportDto) {
-    return this.feedbackService
-      .createBugReport(dto)
-      .then((report) => ({
-        report,
-        success: true,
-        confirmation: 'Bug report received. Thank you for helping us improve.',
-      }));
+    return this.feedbackService.createBugReport(dto).then((report) => ({
+      report,
+      success: true,
+      confirmation: 'Bug report received. Thank you for helping us improve.',
+    }));
   }
 
   @Get('admin/contacts')
@@ -82,7 +78,10 @@ export class FeedbackController {
   @Patch('admin/bugs/:id/status')
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
-  updateBugStatus(@Param('id') id: string, @Body() dto: UpdateFeedbackStatusDto) {
+  updateBugStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateFeedbackStatusDto,
+  ) {
     return this.feedbackService.updateBugStatus(id, dto);
   }
 

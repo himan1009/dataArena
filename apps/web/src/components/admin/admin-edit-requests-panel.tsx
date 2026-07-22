@@ -8,6 +8,7 @@ import { ArticleStatusBadge } from "@/components/notes/article-status-badge";
 import { MarkdownContent } from "@/components/notes/markdown-content";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { SelectField } from "@/components/ui/select-field";
 import {
   ApiError,
   notesApi,
@@ -131,24 +132,24 @@ export function AdminEditRequestsPanel({
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor={`assignee-${article.id}`}>Assign editor to rewrite *</Label>
-              <select
+              <SelectField
                 id={`assignee-${article.id}`}
                 value={assignees[article.id] ?? ""}
-                onChange={(event) =>
+                options={editors.map((editor) => ({
+                  value: editor.id,
+                  label: `${editor.name || editor.email}${
+                    editor.id === article.author?.id ? " (original author)" : ""
+                  }`,
+                }))}
+                onValueChange={(value) =>
                   setAssignees((current) => ({
                     ...current,
-                    [article.id]: event.target.value,
+                    [article.id]: value,
                   }))
                 }
-                className="h-10 w-full rounded-lg border border-border bg-white/[0.03] px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
-              >
-                {editors.map((editor) => (
-                  <option key={editor.id} value={editor.id}>
-                    {editor.name || editor.email}
-                    {editor.id === article.author?.id ? " (original author)" : ""}
-                  </option>
-                ))}
-              </select>
+                placeholder="Choose an editor"
+                className="h-10"
+              />
               <p className="text-xs text-muted-foreground">
                 Choose the same author or assign a different editor.
               </p>

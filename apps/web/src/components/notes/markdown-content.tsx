@@ -1,19 +1,47 @@
 import Link from "next/link";
-import type { ImgHTMLAttributes } from "react";
+import type { ImgHTMLAttributes, ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { slugify } from "@/lib/notes-utils";
 import { cn } from "@/lib/utils";
 
-const markdownComponents = {
-  h1: ({ children }: { children?: React.ReactNode }) => (
-    <h1 className="mb-5 text-3xl font-semibold tracking-tight text-foreground">{children}</h1>
+function headingId(children: ReactNode) {
+  const text =
+    typeof children === "string"
+      ? children
+      : Array.isArray(children)
+        ? children.map((child) => (typeof child === "string" ? child : "")).join("")
+        : "";
+
+  return slugify(text.replace(/\*\*/g, ""));
+}
+
+function createMarkdownComponents(withHeadingIds: boolean) {
+  return {
+  h1: ({ children }: { children?: ReactNode }) => (
+    <h1
+      id={withHeadingIds ? headingId(children) : undefined}
+      className="mb-5 scroll-mt-28 text-3xl font-semibold tracking-tight text-foreground"
+    >
+      {children}
+    </h1>
   ),
-  h2: ({ children }: { children?: React.ReactNode }) => (
-    <h2 className="mb-4 mt-10 text-2xl font-semibold tracking-tight text-foreground">{children}</h2>
+  h2: ({ children }: { children?: ReactNode }) => (
+    <h2
+      id={withHeadingIds ? headingId(children) : undefined}
+      className="mb-4 mt-10 scroll-mt-28 text-2xl font-semibold tracking-tight text-foreground"
+    >
+      {children}
+    </h2>
   ),
-  h3: ({ children }: { children?: React.ReactNode }) => (
-    <h3 className="mb-3 mt-10 text-xl font-semibold tracking-tight text-foreground">{children}</h3>
+  h3: ({ children }: { children?: ReactNode }) => (
+    <h3
+      id={withHeadingIds ? headingId(children) : undefined}
+      className="mb-3 mt-10 scroll-mt-28 text-xl font-semibold tracking-tight text-foreground"
+    >
+      {children}
+    </h3>
   ),
   h4: ({ children }: { children?: React.ReactNode }) => (
     <h4 className="mb-3 mt-8 text-lg font-semibold tracking-tight text-foreground">{children}</h4>
@@ -91,30 +119,42 @@ const markdownComponents = {
       className="my-6 max-w-full rounded-xl border border-white/[0.08]"
     />
   ),
-};
+  };
+}
+
+const defaultMarkdownComponents = createMarkdownComponents(false);
+const headingMarkdownComponents = createMarkdownComponents(true);
 
 export function MarkdownContent({
   content,
   className,
   variant = "default",
+  headingIds = false,
 }: {
   content: string;
   className?: string;
-  variant?: "default" | "embedded" | "reading";
+  variant?: "default" | "embedded" | "reading" | "standards";
+  headingIds?: boolean;
 }) {
+  const components =
+    headingIds || variant === "standards"
+      ? headingMarkdownComponents
+      : defaultMarkdownComponents;
+
   return (
     <div
       className={cn(
         variant === "default" && "glass-panel max-w-3xl p-8 sm:p-10",
         variant === "embedded" && "mx-auto max-w-3xl",
         variant === "reading" && "article-reading w-full glass-panel p-8 sm:p-10 lg:p-12 xl:p-14",
+        variant === "standards" && "w-full",
         "[&_ul.contains-task-list]:list-none [&_ul.contains-task-list]:space-y-2 [&_ul.contains-task-list]:pl-0",
         "[&_li.task-list-item]:flex [&_li.task-list-item]:items-start [&_li.task-list-item]:gap-2",
         "[&_input.task-list-item-checkbox]:mt-1.5",
         className,
       )}
     >
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {content}
       </ReactMarkdown>
     </div>

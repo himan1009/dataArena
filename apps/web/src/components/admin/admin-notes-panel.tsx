@@ -1,12 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-import { Loader2, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Trash2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SelectField } from "@/components/ui/select-field";
+import { useAsyncAction } from "@/hooks/use-async-action";
 import { ApiError, notesApi } from "@/lib/notes-api";
 import { slugify } from "@/lib/notes-utils";
 
@@ -35,9 +37,9 @@ export function AdminNotesPanel({
   categories: AdminCategory[];
 }) {
   const router = useRouter();
+  const { run, isLoading } = useAsyncAction();
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState<string | null>(null);
 
   const [categoryForm, setCategoryForm] = useState({
     name: "",
@@ -71,6 +73,48 @@ export function AdminNotesPanel({
     content: "# New article\n\nStart writing markdown here.",
   });
 
+  const [manageCategoryId, setManageCategoryId] = useState(
+    categories[0]?.id ?? "",
+  );
+  const [manageTopicId, setManageTopicId] = useState(
+    categories[0]?.topics?.[0]?.id ?? "",
+  );
+
+  const manageCategory = useMemo(
+    () => categories.find((category) => category.id === manageCategoryId),
+    [categories, manageCategoryId],
+  );
+
+  const manageTopics = manageCategory?.topics ?? [];
+
+  const manageTopic = useMemo(
+    () => manageTopics.find((topic) => topic.id === manageTopicId),
+    [manageTopics, manageTopicId],
+  );
+
+  useEffect(() => {
+    if (!categories.length) {
+      setManageCategoryId("");
+      setManageTopicId("");
+      return;
+    }
+
+    if (!categories.some((category) => category.id === manageCategoryId)) {
+      setManageCategoryId(categories[0].id);
+    }
+  }, [categories, manageCategoryId]);
+
+  useEffect(() => {
+    if (!manageTopics.length) {
+      setManageTopicId("");
+      return;
+    }
+
+    if (!manageTopics.some((topic) => topic.id === manageTopicId)) {
+      setManageTopicId(manageTopics[0].id);
+    }
+  }, [manageTopics, manageTopicId]);
+
   const handleError = (err: unknown) => {
     if (err instanceof ApiError) {
       setError(err.message);
@@ -79,24 +123,155 @@ export function AdminNotesPanel({
     }
   };
 
-  const submit = async (key: string, action: () => Promise<unknown>) => {
+  const categoryOptions = useMemo(
+    () => categories.map((category) => ({ value: category.id, label: category.name })),
+    [categories],
+  );
+
+  const articleTopicOptions = useMemo(
+    () =>
+      allTopics.map((topic) => ({
+        value: topic.id,
+        label: `${topic.categoryName} · ${topic.name}`,
+      })),
+    [allTopics],
+  );
+
+  const manageTopicOptions = useMemo(
+    () => manageTopics.map((topic) => ({ value: topic.id, label: topic.name })),
+    [manageTopics],
+  );
+
+  useEffect(() => {
+    if (!categories.length) {
+      setTopicForm((current) =>
+        current.categoryId ? { ...current, categoryId: "" } : current,
+      );
+      return;
+    }
+
+    if (!categories.some((category) => category.id === topicForm.categoryId)) {
+      setTopicForm((current) => ({
+        ...current,
+        categoryId: categories[0].id,
+      }));
+    }
+  }, [categories, topicForm.categoryId]);
+
+  useEffect(() => {
+    if (!allTopics.length) {
+      setArticleForm((current) =>
+        current.topicId ? { ...current, topicId: "" } : current,
+      );
+      return;
+    }
+
+    if (!allTopics.some((topic) => topic.id === articleForm.topicId)) {
+      setArticleForm((current) => ({
+        ...current,
+        topicId: allTopics[0].id,
+      }));
+    }
+  }, [allTopics, articleForm.topicId]);
+
+  const submit = async (
+    key: string,
+    action: () => Promise<unknown>,
+    successMessage = "Saved successfully.",
+  ) => {
     setMessage(null);
     setError(null);
-    setIsSubmitting(key);
 
     try {
-      await action();
-      setMessage("Saved successfully.");
+      await run(key, action);
+      setMessage(successMessage);
       router.refresh();
     } catch (err) {
       handleError(err);
-    } finally {
-      setIsSubmitting(null);
     }
   };
 
-  const confirmDelete = (label: string) =>
-    window.confirm(`Delete ${label}? This cannot be undone.`);
+  const handleCategoryChange = (categoryId: string) => {
+    setManageCategoryId(categoryId);
+    const nextCategory = categories.find((category) => category.id === categoryId);
+    setManageTopicId(nextCategory?.topics?.[0]?.id ?? "");
+  };
+
+  const handleDeleteCategory = async () => {
+    if (!manageCategory) {
+      setError("Select a category to delete.");
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Delete category "${manageCategory.name}" and all of its topics and articles? This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+
+    const deletedCategory = manageCategory;
+    const submitKey = `delete-category-${deletedCategory.id}`;
+
+    setMessage(null);
+    setError(null);
+
+    try {
+      await run(submitKey, () => notesApi.deleteCategory(deletedCategory.id));
+      setMessage(`Category "${deletedCategory.name}" deleted.`);
+
+      const nextCategory = categories.find(
+        (category) => category.id !== deletedCategory.id,
+      );
+
+      if (nextCategory) {
+        handleCategoryChange(nextCategory.id);
+      } else {
+        setManageCategoryId("");
+        setManageTopicId("");
+      }
+
+      router.refresh();
+    } catch (err) {
+      handleError(err);
+    }
+  };
+
+  const handleDeleteTopic = async () => {
+    if (!manageTopic) {
+      setError("Select a topic to delete.");
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Delete topic "${manageTopic.name}" and all of its articles? This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+
+    const deletedTopic = manageTopic;
+    const submitKey = `delete-topic-${deletedTopic.id}`;
+
+    setMessage(null);
+    setError(null);
+
+    try {
+      await run(submitKey, () => notesApi.deleteTopic(deletedTopic.id));
+      setMessage(`Topic "${deletedTopic.name}" deleted.`);
+
+      const remainingTopics = manageTopics.filter(
+        (topic) => topic.id !== deletedTopic.id,
+      );
+      setManageTopicId(remainingTopics[0]?.id ?? "");
+
+      router.refresh();
+    } catch (err) {
+      handleError(err);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -173,16 +348,13 @@ export function AdminNotesPanel({
             />
           </div>
           <div className="sm:col-span-2">
-            <Button type="submit" disabled={isSubmitting === "category"}>
-              {isSubmitting === "category" ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Create category"
-              )}
-            </Button>
+            <LoadingButton
+              type="submit"
+              loading={isLoading("category")}
+              loadingLabel="Creating category..."
+            >
+              Create category
+            </LoadingButton>
           </div>
         </form>
       </section>
@@ -205,24 +377,25 @@ export function AdminNotesPanel({
         >
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="topic-category">Category</Label>
-            <select
+            <SelectField
               id="topic-category"
-              className="surface-input w-full rounded-xl px-3"
               value={topicForm.categoryId}
-              onChange={(event) =>
+              options={categoryOptions}
+              onValueChange={(value) =>
                 setTopicForm((current) => ({
                   ...current,
-                  categoryId: event.target.value,
+                  categoryId: value,
                 }))
               }
+              placeholder={categories.length ? "Choose a category" : "Create a category first"}
+              disabled={!categories.length}
               required
-            >
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+            />
+            {!categories.length && (
+              <p className="text-xs text-muted-foreground">
+                Create a category above before adding topics.
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="topic-name">Name</Label>
@@ -270,16 +443,14 @@ export function AdminNotesPanel({
             />
           </div>
           <div className="sm:col-span-2">
-            <Button type="submit" disabled={isSubmitting === "topic" || !categories.length}>
-              {isSubmitting === "topic" ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Create topic"
-              )}
-            </Button>
+            <LoadingButton
+              type="submit"
+              loading={isLoading("topic")}
+              loadingLabel="Creating topic..."
+              disabled={!categories.length}
+            >
+              Create topic
+            </LoadingButton>
           </div>
         </form>
       </section>
@@ -302,24 +473,25 @@ export function AdminNotesPanel({
         >
           <div className="space-y-2">
             <Label htmlFor="article-topic">Topic</Label>
-            <select
+            <SelectField
               id="article-topic"
-              className="surface-input w-full rounded-xl px-3"
               value={articleForm.topicId}
-              onChange={(event) =>
+              options={articleTopicOptions}
+              onValueChange={(value) =>
                 setArticleForm((current) => ({
                   ...current,
-                  topicId: event.target.value,
+                  topicId: value,
                 }))
               }
+              placeholder={allTopics.length ? "Choose a topic" : "Create a topic first"}
+              disabled={!allTopics.length}
               required
-            >
-              {allTopics.map((topic) => (
-                <option key={topic.id} value={topic.id}>
-                  {topic.categoryName} · {topic.name}
-                </option>
-              ))}
-            </select>
+            />
+            {!allTopics.length && (
+              <p className="text-xs text-muted-foreground">
+                Create a category and topic before adding articles.
+              </p>
+            )}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
@@ -369,108 +541,114 @@ export function AdminNotesPanel({
               required
             />
           </div>
-          <Button type="submit" disabled={isSubmitting === "article" || !allTopics.length}>
-            {isSubmitting === "article" ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              "Create article"
-            )}
-          </Button>
+          <LoadingButton
+            type="submit"
+            loading={isLoading("article")}
+            loadingLabel="Creating article..."
+            disabled={!allTopics.length}
+          >
+            Create article
+          </LoadingButton>
         </form>
       </section>
 
       <section className="glass-panel p-6 sm:p-8">
         <h3 className="font-semibold tracking-tight">Manage categories & topics</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Delete empty or unused categories and topics. Deleting a category removes all its topics and articles.
+          Select a category, then choose a topic to review or delete. Deleting a
+          category removes all of its topics and articles.
         </p>
-        <div className="mt-4 space-y-4">
-          {categories.map((category) => (
-            <div
-              key={category.id}
-              className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-4"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="font-medium">{category.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    /notes/{category.slug} · {category.published ? "Published" : "Draft"} ·{" "}
-                    {category.topicCount ?? category.topics?.length ?? 0} topics
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="border-destructive/30 text-destructive hover:bg-destructive/10"
-                  disabled={isSubmitting === `delete-category-${category.id}`}
-                  onClick={() => {
-                    if (!confirmDelete(`category "${category.name}" and all its topics`)) {
-                      return;
-                    }
-                    submit(`delete-category-${category.id}`, () =>
-                      notesApi.deleteCategory(category.id),
-                    );
-                  }}
-                >
-                  {isSubmitting === `delete-category-${category.id}` ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="size-4" />
-                  )}
-                  Delete category
-                </Button>
+
+        {categories.length === 0 ? (
+          <p className="mt-6 text-sm text-muted-foreground">No categories yet.</p>
+        ) : (
+          <div className="mt-6 space-y-6">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="manage-category">Category</Label>
+                <SelectField
+                  id="manage-category"
+                  value={manageCategoryId}
+                  options={categoryOptions}
+                  onValueChange={handleCategoryChange}
+                  placeholder="Choose a category"
+                />
               </div>
 
-              {(category.topics ?? []).length > 0 && (
-                <ul className="mt-4 space-y-2 border-t border-white/[0.06] pt-4">
-                  {category.topics?.map((topic) => (
-                    <li
-                      key={topic.id}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-white/[0.02] px-3 py-2"
-                    >
-                      <div>
-                        <p className="text-sm font-medium">{topic.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {topic.slug} · {topic.published ? "Published" : "Draft"}
-                          {topic.openForAuthors ? " · Open for authors" : ""}
-                        </p>
-                      </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        disabled={isSubmitting === `delete-topic-${topic.id}`}
-                        onClick={() => {
-                          if (!confirmDelete(`topic "${topic.name}" and its articles`)) {
-                            return;
-                          }
-                          submit(`delete-topic-${topic.id}`, () =>
-                            notesApi.deleteTopic(topic.id),
-                          );
-                        }}
-                      >
-                        {isSubmitting === `delete-topic-${topic.id}` ? (
-                          <Loader2 className="size-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="size-4" />
-                        )}
-                        Delete topic
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="manage-topic">Topic</Label>
+                <SelectField
+                  id="manage-topic"
+                  value={manageTopicId}
+                  options={manageTopicOptions}
+                  onValueChange={setManageTopicId}
+                  placeholder="Choose a topic"
+                  disabled={!manageTopics.length}
+                />
+              </div>
             </div>
-          ))}
-          {categories.length === 0 && (
-            <p className="text-sm text-muted-foreground">No categories yet.</p>
-          )}
-        </div>
+
+            {manageCategory && (
+              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-4">
+                <p className="text-sm font-medium">{manageCategory.name}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  /notes/{manageCategory.slug} ·{" "}
+                  {manageCategory.published ? "Published" : "Draft"} ·{" "}
+                  {manageCategory.topicCount ?? manageTopics.length} topics
+                </p>
+
+                {manageTopic && (
+                  <div className="mt-4 border-t border-white/[0.06] pt-4">
+                    <p className="text-sm font-medium">{manageTopic.name}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {manageTopic.slug} ·{" "}
+                      {manageTopic.published ? "Published" : "Draft"}
+                      {manageTopic.openForAuthors ? " · Open for authors" : ""}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-3">
+              <LoadingButton
+                type="button"
+                variant="outline"
+                className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                loading={Boolean(
+                  manageCategory && isLoading(`delete-category-${manageCategory.id}`),
+                )}
+                loadingLabel="Deleting category..."
+                disabled={!manageCategory}
+                onClick={handleDeleteCategory}
+              >
+                <Trash2 className="size-4" />
+                Delete category
+              </LoadingButton>
+
+              <LoadingButton
+                type="button"
+                variant="outline"
+                className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                loading={Boolean(
+                  manageTopic && isLoading(`delete-topic-${manageTopic.id}`),
+                )}
+                loadingLabel="Deleting topic..."
+                disabled={!manageTopic}
+                onClick={handleDeleteTopic}
+              >
+                <Trash2 className="size-4" />
+                Delete topic
+              </LoadingButton>
+            </div>
+
+            {!manageTopic && manageCategory && manageTopics.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                This category has no topics yet. You can still delete the whole category.
+              </p>
+            )}
+          </div>
+        )}
       </section>
     </div>
   );

@@ -6,6 +6,7 @@ import { Bug, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SelectField } from "@/components/ui/select-field";
 import {
   BUG_REPORT_AREAS,
   FeedbackApiError,
@@ -105,19 +106,17 @@ export function BugReportForm({
 
       <div className="space-y-2">
         <Label htmlFor="bug-area">Where did you see the problem?</Label>
-        <select
+        <SelectField
           id="bug-area"
-          className="surface-input w-full rounded-xl px-3"
           value={area}
-          onChange={(event) => setArea(event.target.value)}
+          options={BUG_REPORT_AREAS.map((option) => ({
+            value: option,
+            label: option,
+          }))}
+          onValueChange={setArea}
+          placeholder="Select area"
           required
-        >
-          {BUG_REPORT_AREAS.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
+        />
       </div>
 
       <div className="space-y-2">

@@ -1,4 +1,5 @@
 import { ApiError } from "@/lib/notes-api";
+import { fetchWithSessionRefresh } from "@/lib/fetch-client";
 
 export type AdminUser = {
   id: string;
@@ -18,7 +19,7 @@ async function adminUsersRequest<T>(
 ): Promise<T> {
   const { method = "GET", body } = options;
 
-  const response = await fetch(`/api/admin/users${path}`, {
+  const response = await fetchWithSessionRefresh(`/api/admin/users${path}`, {
     method,
     headers: { "Content-Type": "application/json" },
     credentials: "include",

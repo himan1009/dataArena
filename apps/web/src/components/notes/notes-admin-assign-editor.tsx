@@ -6,6 +6,7 @@ import { CheckCircle2, Loader2, UserPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { SelectField } from "@/components/ui/select-field";
 import { ApiError, notesApi, type AuthorSummary } from "@/lib/notes-api";
 
 export function NotesAdminAssignEditor({
@@ -124,20 +125,20 @@ export function NotesAdminAssignEditor({
 
       <div className="space-y-2">
         <Label htmlFor={`assign-editor-${articleId}`}>Team member</Label>
-        <select
+        <SelectField
           id={`assign-editor-${articleId}`}
           value={assigneeId}
-          onChange={(event) => setAssigneeId(event.target.value)}
+          options={editors.map((editor) => ({
+            value: editor.id,
+            label: `${editor.name || editor.email}${
+              editor.role === "ADMIN" ? " (admin)" : ""
+            }`,
+          }))}
+          onValueChange={setAssigneeId}
+          placeholder="Choose an editor"
           disabled={loadingEditors}
-          className="h-10 w-full rounded-lg border border-border bg-white/[0.03] px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
-        >
-          {editors.map((editor) => (
-            <option key={editor.id} value={editor.id}>
-              {editor.name || editor.email}
-              {editor.role === "ADMIN" ? " (admin)" : ""}
-            </option>
-          ))}
-        </select>
+          className="h-10"
+        />
       </div>
 
       <div className="space-y-2">

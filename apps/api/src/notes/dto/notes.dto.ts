@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
 } from 'class-validator';
 
@@ -130,14 +131,17 @@ export class CreateArticleDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   title!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   slug!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(500000)
   content!: string;
 
   @IsOptional()
@@ -163,6 +167,7 @@ export class UpdateArticleDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(500000)
   content?: string;
 
   @IsOptional()

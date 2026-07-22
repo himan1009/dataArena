@@ -1,6 +1,6 @@
 import { Bot } from "lucide-react";
 
-import { ComingSoon } from "@/components/app/coming-soon";
+import { ComingSoonPage } from "@/components/app/coming-soon-page";
 
 export const metadata = {
   title: "AI Copilot",
@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function CopilotPage() {
   return (
-    <ComingSoon
+    <ComingSoonPage
       icon={Bot}
       title="AI Copilot"
       description="Contextual AI assistant on every page — explain code, generate quizzes, debug queries, and more."

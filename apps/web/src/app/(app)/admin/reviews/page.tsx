@@ -1,61 +1,39 @@
-import { redirect } from "next/navigation";
 import { ClipboardCheck } from "lucide-react";
 
 import { AdminEditRequestsPanel } from "@/components/admin/admin-edit-requests-panel";
 import { AdminReviewPanel } from "@/components/admin/admin-review-panel";
-import { IconBox } from "@/components/ui/icon-box";
-import { PageHeader } from "@/components/ui/section-header";
-import { requireUser } from "@/lib/auth-server";
-import { getBackendUrl } from "@/lib/proxy";
+import { AppPage } from "@/components/ui/app-page";
+import { PageIntro } from "@/components/ui/page-intro";
+import { requireAdmin } from "@/lib/auth-server";
+import { fetchAdminData } from "@/lib/fetch-server";
+import type { EditRequestArticle, ReviewArticle } from "@/lib/notes-api";
 
 export const metadata = {
-  title: "Review queue",
+  title: "Reviews",
 };
 
-async function fetchAdminJson(path: string, cookieHeader: string) {
-  const response = await fetch(getBackendUrl(path), {
-    headers: { cookie: cookieHeader },
-    cache: "no-store",
-  });
-
-  return response.ok ? response.json() : null;
-}
-
 export default async function AdminReviewsPage() {
-  const user = await requireUser();
-
-  if (user.role !== "ADMIN") {
-    redirect("/dashboard");
-  }
-
-  const cookieStore = await import("next/headers").then((mod) => mod.cookies());
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((cookie) => `${cookie.name}=${cookie.value}`)
-    .join("; ");
+  await requireAdmin();
 
   const [reviewData, editRequestData] = await Promise.all([
-    fetchAdminJson("/notes/admin/review-queue", cookieHeader),
-    fetchAdminJson("/notes/admin/edit-requests", cookieHeader),
+    fetchAdminData<{ articles: ReviewArticle[] }>("/notes/admin/review-queue"),
+    fetchAdminData<{ articles: EditRequestArticle[] }>("/notes/admin/edit-requests"),
   ]);
 
   return (
-    <div className="space-y-12 sm:space-y-14">
-      <div className="flex items-start gap-5">
-        <IconBox icon={ClipboardCheck} size="lg" className="hidden sm:flex" />
-        <PageHeader
-          label="Admin"
-          title="Review queue"
-          description="Approve submissions, grant edit access when authors request changes, and manage the publishing workflow."
-        />
-      </div>
+    <AppPage>
+      <PageIntro
+        icon={ClipboardCheck}
+        label="Admin"
+        title="Reviews"
+        description="Approve submissions, grant edit access when authors request changes, and manage the publishing workflow."
+      />
 
       <section className="space-y-6">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">Edit access requests</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Authors raise edit requests with a comment. Approve, assign who should rewrite, or reject
-            with feedback.
+          <p className="mt-2 text-sm text-muted-foreground">
+            Authors requesting permission to edit published articles.
           </p>
         </div>
         <AdminEditRequestsPanel articles={editRequestData?.articles ?? []} />
@@ -63,13 +41,13 @@ export default async function AdminReviewsPage() {
 
       <section className="space-y-6">
         <div>
-          <h2 className="text-lg font-semibold tracking-tight">New submissions</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Review articles waiting to be published for the first time or after revisions.
+          <h2 className="text-lg font-semibold tracking-tight">Submission queue</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            New articles waiting for admin review and publication.
           </p>
         </div>
         <AdminReviewPanel articles={reviewData?.articles ?? []} />
       </section>
-    </div>
+    </AppPage>
   );
 }

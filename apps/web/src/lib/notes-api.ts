@@ -1,3 +1,5 @@
+import { fetchWithSessionRefresh } from "@/lib/fetch-client";
+
 export type ArticleStatus =
   | "DRAFT"
   | "SUBMITTED"
@@ -91,14 +93,28 @@ async function notesRequest<T>(
 ): Promise<T> {
   const { method = "GET", body } = options;
 
-  const response = await fetch(`/api/notes${path}`, {
+  const headers: Record<string, string> = {};
+  if (body !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const response = await fetchWithSessionRefresh(`/api/notes${path}`, {
     method,
-    headers: { "Content-Type": "application/json" },
+    headers,
     credentials: "include",
-    body: body ? JSON.stringify(body) : undefined,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
-  const data = await response.json().catch(() => ({}));
+  const text = await response.text();
+  let data: Record<string, unknown> = {};
+
+  if (text) {
+    try {
+      data = JSON.parse(text) as Record<string, unknown>;
+    } catch {
+      data = {};
+    }
+  }
 
   if (!response.ok) {
     const message =
@@ -244,10 +260,16 @@ export const notesApi = {
     notesRequest(`/admin/articles/${id}`, { method: "PATCH", body: payload }),
 
   deleteCategory: (id: string) =>
-    notesRequest(`/admin/categories/${id}`, { method: "DELETE" }),
+    notesRequest<{ success: boolean; category: { id: string; name: string } }>(
+      `/admin/categories/${id}`,
+      { method: "DELETE" },
+    ),
 
   deleteTopic: (id: string) =>
-    notesRequest(`/admin/topics/${id}`, { method: "DELETE" }),
+    notesRequest<{ success: boolean; topic: { id: string; name: string } }>(
+      `/admin/topics/${id}`,
+      { method: "DELETE" },
+    ),
 
   deleteArticleAdmin: (id: string) =>
     notesRequest(`/admin/articles/${id}`, { method: "DELETE" }),

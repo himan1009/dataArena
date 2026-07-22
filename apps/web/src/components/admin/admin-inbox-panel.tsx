@@ -40,12 +40,16 @@ export function AdminInboxPanel({
   const router = useRouter();
   const [tab, setTab] = useState<"contact" | "bugs">("contact");
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const setContactStatus = async (id: string, status: FeedbackStatus) => {
     setLoadingId(id);
+    setError(null);
     try {
       await feedbackApi.updateContactStatus(id, status);
       router.refresh();
+    } catch {
+      setError("Could not update the contact message. Please try again.");
     } finally {
       setLoadingId(null);
     }
@@ -53,9 +57,12 @@ export function AdminInboxPanel({
 
   const setBugStatus = async (id: string, status: FeedbackStatus) => {
     setLoadingId(id);
+    setError(null);
     try {
       await feedbackApi.updateBugStatus(id, status);
       router.refresh();
+    } catch {
+      setError("Could not update the bug report. Please try again.");
     } finally {
       setLoadingId(null);
     }
@@ -66,6 +73,12 @@ export function AdminInboxPanel({
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
         <Button
           type="button"

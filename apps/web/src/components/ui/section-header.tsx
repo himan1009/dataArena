@@ -33,16 +33,18 @@ export function PageHeader({
   title,
   description,
   className,
+  as: Heading = "h2",
 }: {
   label?: string;
   title: string;
   description?: string;
   className?: string;
+  as?: "h1" | "h2";
 }) {
   return (
     <header className={cn("mb-8 sm:mb-10", className)}>
       {label && <p className="section-label mb-2">{label}</p>}
-      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
+      <Heading className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</Heading>
       {description && (
         <p className="prose-muted mt-2 max-w-2xl">{description}</p>
       )}

@@ -1,4 +1,12 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+  MaxLength,
+} from 'class-validator';
 
 import { FeedbackStatus } from '@prisma/client';
 
@@ -36,6 +44,10 @@ export class CreateBugReportDto {
   @IsOptional()
   @IsString()
   @MaxLength(500)
+  @IsUrl(
+    { require_protocol: true },
+    { message: 'Page URL must be http or https' },
+  )
   pageUrl?: string;
 
   @IsString()

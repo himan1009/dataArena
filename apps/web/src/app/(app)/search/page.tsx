@@ -1,6 +1,6 @@
 import { Search } from "lucide-react";
 
-import { ComingSoon } from "@/components/app/coming-soon";
+import { ComingSoonPage } from "@/components/app/coming-soon-page";
 
 export const metadata = {
   title: "Search",
@@ -8,9 +8,9 @@ export const metadata = {
 
 export default function SearchPage() {
   return (
-    <ComingSoon
+    <ComingSoonPage
       icon={Search}
-      title="Unified Search"
+      title="Search"
       description="Search across notes, practice problems, interview questions, and more — all in one place."
       features={[
         "Full-text search with Meilisearch",

@@ -4,14 +4,16 @@ import {
   Bookmark,
   Bot,
   Code2,
+  LayoutDashboard,
   Search,
   TrendingUp,
   ArrowUpRight,
 } from "lucide-react";
 
+import { AppPage } from "@/components/ui/app-page";
 import { Badge } from "@/components/ui/badge";
 import { IconBox } from "@/components/ui/icon-box";
-import { PageHeader } from "@/components/ui/section-header";
+import { PageIntro } from "@/components/ui/page-intro";
 import { requireUser } from "@/lib/auth-server";
 import { cn } from "@/lib/utils";
 
@@ -63,8 +65,9 @@ export default async function DashboardPage() {
   const greeting = firstName ? `Welcome back, ${firstName}` : "Welcome back";
 
   return (
-    <div className="space-y-10 sm:space-y-12">
-      <PageHeader
+    <AppPage>
+      <PageIntro
+        icon={LayoutDashboard}
         label="Dashboard"
         title={greeting}
         description="Pick up where you left off, or explore something new."
@@ -140,6 +143,6 @@ export default async function DashboardPage() {
           ))}
         </div>
       </section>
-    </div>
+    </AppPage>
   );
 }

@@ -1,3 +1,5 @@
+import { fetchWithSessionRefresh } from "@/lib/fetch-client";
+
 export type FeedbackStatus = "NEW" | "READ" | "ARCHIVED";
 
 export type ContactMessage = {
@@ -36,7 +38,7 @@ async function feedbackRequest<T>(
 ): Promise<T> {
   const { method = "GET", body } = options;
 
-  const response = await fetch(`/api/feedback${path}`, {
+  const response = await fetchWithSessionRefresh(`/api/feedback${path}`, {
     method,
     headers: { "Content-Type": "application/json" },
     credentials: "include",

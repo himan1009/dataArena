@@ -45,6 +45,7 @@ model User {
   editRequestsMade Article[]   @relation("EditRequestsBy")
   editAssignments  Article[]   @relation("EditAssignments")
   articlesLastEdited Article[] @relation("ArticleLastEditor")
+  writingStandardsUpdated WritingStandard[]
 
   @@map("users")
 }
@@ -148,6 +149,25 @@ enum FeedbackStatus {
   NEW
   READ
   ARCHIVED
+}
+
+enum WritingStandardKey {
+  MANDATORY
+  ESSENTIAL
+}
+
+model WritingStandard {
+  id          String             @id @default(cuid())
+  key         WritingStandardKey @unique
+  title       String
+  content     String             @db.Text
+  updatedById String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("writing_standards")
 }
 
 model ContactMessage {

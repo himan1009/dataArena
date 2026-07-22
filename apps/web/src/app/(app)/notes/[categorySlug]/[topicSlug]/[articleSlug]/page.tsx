@@ -7,7 +7,8 @@ import { ArticleNav, MarkdownContent } from "@/components/notes/markdown-content
 import { NotesAdminAssignEditor } from "@/components/notes/notes-admin-assign-editor";
 import { NotesAdminEditLink } from "@/components/notes/notes-admin-edit-link";
 import { NotesBreadcrumbs } from "@/components/notes/notes-breadcrumbs";
-import { getCurrentUser } from "@/lib/auth-server";
+import { AppPage } from "@/components/ui/app-page";
+import { getCurrentUser, isAdmin } from "@/lib/auth-server";
 import { getArticle, NotesApiError } from "@/lib/notes-server";
 
 type PageProps = {
@@ -32,7 +33,6 @@ export async function generateMetadata({ params }: PageProps) {
 export default async function ArticlePage({ params }: PageProps) {
   const { categorySlug, topicSlug, articleSlug } = await params;
   const user = await getCurrentUser();
-  const isAdmin = user?.role === "ADMIN";
 
   let article;
   try {
@@ -45,75 +45,77 @@ export default async function ArticlePage({ params }: PageProps) {
   }
 
   return (
-    <article className="w-full space-y-8 sm:space-y-10">
-      <header className="space-y-5 border-b border-border pb-8 sm:pb-10">
-        <NotesBreadcrumbs
-          items={[
-            { label: "Notes", href: "/notes" },
-            {
-              label: article.topic.category.name,
-              href: `/notes/${article.topic.category.slug}`,
-            },
-            {
-              label: article.topic.name,
-              href: `/notes/${categorySlug}/${topicSlug}`,
-            },
-            { label: article.title },
-          ]}
-        />
+    <AppPage className="space-y-8 sm:space-y-10">
+      <article className="w-full">
+        <header className="space-y-5 border-b border-border pb-8 sm:pb-10">
+          <NotesBreadcrumbs
+            items={[
+              { label: "Notes", href: "/notes" },
+              {
+                label: article.topic.category.name,
+                href: `/notes/${article.topic.category.slug}`,
+              },
+              {
+                label: article.topic.name,
+                href: `/notes/${categorySlug}/${topicSlug}`,
+              },
+              { label: article.title },
+            ]}
+          />
 
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="space-y-3">
-            <p className="section-label">{article.topic.name}</p>
-            <h1 className="max-w-5xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-              {article.title}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Last updated {new Date(article.updatedAt).toLocaleDateString()}
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <AdminEditedBadge adminEditedAt={article.adminEditedAt} />
-              <EditorEditedBadge
-                editorEditedAt={article.editorEditedAt}
-                editorName={
-                  article.lastEditor?.name || article.lastEditorNameSnapshot
-                }
-              />
-            </div>
-          </div>
-          {isAdmin && (
-            <div className="flex flex-col items-end gap-3">
-              <div className="flex flex-wrap justify-end gap-2">
-                <NotesAdminAssignEditor
-                  articleId={article.id}
-                  articleTitle={article.title}
-                  topicHref={`/notes/${categorySlug}/${topicSlug}`}
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="space-y-3">
+              <p className="section-label">{article.topic.name}</p>
+              <h1 className="max-w-5xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+                {article.title}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Last updated {new Date(article.updatedAt).toLocaleDateString()}
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <AdminEditedBadge adminEditedAt={article.adminEditedAt} />
+                <EditorEditedBadge
+                  editorEditedAt={article.editorEditedAt}
+                  editorName={
+                    article.lastEditor?.name || article.lastEditorNameSnapshot
+                  }
                 />
-                <NotesAdminEditLink articleId={article.id} />
               </div>
             </div>
-          )}
+            {user && isAdmin(user) && (
+              <div className="flex flex-col items-end gap-3">
+                <div className="flex flex-wrap justify-end gap-2">
+                  <NotesAdminAssignEditor
+                    articleId={article.id}
+                    articleTitle={article.title}
+                    topicHref={`/notes/${categorySlug}/${topicSlug}`}
+                  />
+                  <NotesAdminEditLink articleId={article.id} />
+                </div>
+              </div>
+            )}
+          </div>
+        </header>
+
+        <MarkdownContent content={article.content} variant="reading" />
+
+        <div className="border-t border-border pt-8">
+          <ArticleContributors
+            author={article.author}
+            publishedAt={article.publishedAt}
+            lastEditor={article.lastEditor}
+            editorEditedAt={article.editorEditedAt}
+            lastEditorNameSnapshot={article.lastEditorNameSnapshot}
+          />
         </div>
-      </header>
 
-      <MarkdownContent content={article.content} variant="reading" />
-
-      <div className="border-t border-border pt-8">
-        <ArticleContributors
-          author={article.author}
-          publishedAt={article.publishedAt}
-          lastEditor={article.lastEditor}
-          editorEditedAt={article.editorEditedAt}
-          lastEditorNameSnapshot={article.lastEditorNameSnapshot}
+        <ArticleNav
+          categorySlug={categorySlug}
+          topicSlug={topicSlug}
+          articles={article.topic.articles}
+          currentSlug={article.slug}
         />
-      </div>
-
-      <ArticleNav
-        categorySlug={categorySlug}
-        topicSlug={topicSlug}
-        articles={article.topic.articles}
-        currentSlug={article.slug}
-      />
-    </article>
+      </article>
+    </AppPage>
   );
 }
