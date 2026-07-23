@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 import { Logo } from "@/components/brand/logo";
 import { mainNavItems, secondaryNavItems, type NavItem } from "@/config/app-navigation";
@@ -13,6 +14,43 @@ import type { AuthUser } from "@/lib/api";
 
 const SIDEBAR_WIDTH = "w-[18rem]";
 
+function NavLinkContent({ item }: { item: NavItem }) {
+  const pathname = usePathname();
+  const { pending } = useLinkStatus();
+  const isActive =
+    pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+  return (
+    <span
+      className={cn(
+        "group flex items-center gap-3 rounded-xl px-3.5 py-3 text-[15px] font-medium transition-all duration-200",
+        isActive
+          ? "nav-active pl-5 text-foreground"
+          : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground",
+        pending && !isActive && "bg-white/[0.06] text-foreground",
+      )}
+    >
+      <item.icon
+        className={cn(
+          "size-[18px] shrink-0",
+          isActive || pending
+            ? "text-gold"
+            : "text-muted-foreground group-hover:text-foreground",
+        )}
+      />
+      <span className="flex-1 truncate">{item.title}</span>
+      {pending && (
+        <Loader2 className="size-4 shrink-0 animate-spin text-gold" aria-hidden />
+      )}
+      {item.badge && !pending && (
+        <Badge className="border-0 bg-white/[0.05] px-2 py-0 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          {item.badge}
+        </Badge>
+      )}
+    </span>
+  );
+}
+
 function NavLink({
   item,
   onNavigate,
@@ -20,33 +58,9 @@ function NavLink({
   item: NavItem;
   onNavigate?: () => void;
 }) {
-  const pathname = usePathname();
-  const isActive =
-    pathname === item.href || pathname.startsWith(`${item.href}/`);
-
   return (
-    <Link
-      href={item.href}
-      onClick={onNavigate}
-      className={cn(
-        "group flex items-center gap-3 rounded-xl px-3.5 py-3 text-[15px] font-medium transition-all duration-200",
-        isActive
-          ? "nav-active pl-5 text-foreground"
-          : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground",
-      )}
-    >
-      <item.icon
-        className={cn(
-          "size-[18px] shrink-0",
-          isActive ? "text-gold" : "text-muted-foreground group-hover:text-foreground",
-        )}
-      />
-      <span className="flex-1 truncate">{item.title}</span>
-      {item.badge && (
-        <Badge className="border-0 bg-white/[0.05] px-2 py-0 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          {item.badge}
-        </Badge>
-      )}
+    <Link href={item.href} onClick={onNavigate} className="block">
+      <NavLinkContent item={item} />
     </Link>
   );
 }

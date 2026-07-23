@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import type { AuthUser } from "@/lib/api";
 
 import { MeshBackground } from "@/components/ui/mesh-background";
@@ -15,7 +17,9 @@ export function AppShell({
 }) {
   return (
     <div className="relative flex min-h-screen">
-      <NavigationProgress />
+      <Suspense fallback={null}>
+        <NavigationProgress />
+      </Suspense>
       <MeshBackground variant="subtle" />
 
       <div className={`hidden shrink-0 lg:block ${SIDEBAR_WIDTH}`}>
