@@ -510,7 +510,7 @@ cd path/to/dataArena && docker compose down
 
 ## 12. Production Deployment
 
-For deploying to production (Vercel + Render + Neon free tier), see **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+For deploying to production (Vercel + Render + Supabase free tier), see **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
 
 ---
 

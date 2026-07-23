@@ -43,7 +43,7 @@ All docs are in the [`docs/`](./docs/) folder:
 | File | What it contains |
 |------|------------------|
 | [docs/SETUP_AND_RUN.md](./docs/SETUP_AND_RUN.md) | **Detailed setup & run guide** (first time + daily start) |
-| [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | **Production deployment** (Vercel + Render + Neon free tier) |
+| [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | **Production deployment** (Vercel + Render + Supabase free tier) |
 | [docs/DEVELOPMENT_LOG.md](./docs/DEVELOPMENT_LOG.md) | Versioned history of everything built (updated after each milestone) |
 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Full product, technical, and functional architecture |
 | [docs/DataArena_Product_Documentation_v1.md](./docs/DataArena_Product_Documentation_v1.md) | Your original product vision document |

@@ -1,0 +1,33 @@
+# DataArena API — Render Blueprint
+# Dashboard: New → Blueprint → connect repo, or create Web Service manually with same settings.
+#
+# DATABASE_URL = Supabase Direct connection (port 5432), not Transaction pooler
+# Build from repo root (npm workspaces). Do NOT set rootDir to apps/api only.
+
+services:
+  - type: web
+    name: dataarena-api
+    runtime: node
+    region: singapore
+    plan: free
+    buildCommand: NPM_CONFIG_PRODUCTION=false npm install && npm run prisma:generate --workspace=api && npm run build --workspace=api
+    startCommand: cd apps/api && npx prisma migrate deploy && npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4000"
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: DATABASE_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false

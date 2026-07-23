@@ -43,7 +43,7 @@ See `.env.example` for all variables. Required:
 
 ## Deploy
 
-See [docs/DEPLOYMENT.md](../../docs/DEPLOYMENT.md) — recommended: **Render** with **Neon** PostgreSQL.
+See [docs/DEPLOYMENT.md](../../docs/DEPLOYMENT.md) — recommended: **Render** with **Supabase** PostgreSQL.
 
 Start command:
 
