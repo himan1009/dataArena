@@ -150,10 +150,29 @@ API_URL=https://dataarena-api.onrender.com
 
 ## Troubleshooting
 
+### Prisma P3009 — failed migration stuck
+
+If a deploy failed mid-migration, Supabase keeps a failed row in `_prisma_migrations`. New deploys will not proceed until you clear it.
+
+**Supabase → SQL Editor → New query → Run:**
+
+```sql
+DELETE FROM "_prisma_migrations"
+WHERE migration_name = '20260721220000_fix_article_column_names';
+```
+
+Then **Redeploy** on Render. The fixed idempotent migration will run and succeed.
+
+**Alternative (fresh empty project):** Supabase → Project Settings → Database → **Reset database**, then redeploy Render (all migrations run from scratch).
+
+---
+
 | Problem | Fix |
 |---------|-----|
 | `prisma migrate` failed | Use **Direct** connection (5432), not pooler (6543) |
 | Build failed: `nest: not found` | Root Directory = **empty** (repo root). Build: `NPM_CONFIG_PRODUCTION=false npm install && npm run prisma:generate --workspace=api && npm run build --workspace=api` |
+| `P3009` failed migrations | See below — clear failed row in Supabase, then redeploy |
+| `MODULE_NOT_FOUND` / `node dist/main` | Push latest code (`tsconfig.build.json` fix). Rebuild on Render |
 | `password authentication failed` | Reset DB password in Supabase → update `DATABASE_URL` |
 | Can't reach database | Wake Supabase project (open dashboard) |
 | Register/login fails | Wake Render API; check `API_URL` on Vercel |
