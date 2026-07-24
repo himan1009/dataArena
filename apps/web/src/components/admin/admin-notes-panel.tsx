@@ -53,6 +53,7 @@ export function AdminNotesPanel({
     name: "",
     slug: "",
     description: "",
+    openForAuthors: true,
   });
 
   const allTopics = useMemo(
@@ -371,6 +372,7 @@ export function AdminNotesPanel({
                 name: topicForm.name,
                 slug: topicForm.slug || slugify(topicForm.name),
                 description: topicForm.description || undefined,
+                openForAuthors: topicForm.openForAuthors,
               }),
             );
           }}
@@ -442,6 +444,26 @@ export function AdminNotesPanel({
               }
             />
           </div>
+          <label className="flex items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 sm:col-span-2">
+            <input
+              type="checkbox"
+              className="mt-1 size-4 rounded border-white/20 accent-primary"
+              checked={topicForm.openForAuthors}
+              onChange={(event) =>
+                setTopicForm((current) => ({
+                  ...current,
+                  openForAuthors: event.target.checked,
+                }))
+              }
+            />
+            <span className="space-y-1">
+              <span className="block text-sm font-medium">Open for authors</span>
+              <span className="block text-xs text-muted-foreground">
+                Editors will see this topic under Write → Available topics and can
+                start a draft article.
+              </span>
+            </span>
+          </label>
           <div className="sm:col-span-2">
             <LoadingButton
               type="submit"
@@ -598,13 +620,75 @@ export function AdminNotesPanel({
                 </p>
 
                 {manageTopic && (
-                  <div className="mt-4 border-t border-white/[0.06] pt-4">
-                    <p className="text-sm font-medium">{manageTopic.name}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {manageTopic.slug} ·{" "}
-                      {manageTopic.published ? "Published" : "Draft"}
-                      {manageTopic.openForAuthors ? " · Open for authors" : ""}
-                    </p>
+                  <div className="mt-4 space-y-4 border-t border-white/[0.06] pt-4">
+                    <div>
+                      <p className="text-sm font-medium">{manageTopic.name}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {manageTopic.slug} ·{" "}
+                        {manageTopic.published ? "Published" : "Draft"}
+                        {manageTopic.openForAuthors ? " · Open for authors" : ""}
+                      </p>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="flex items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
+                        <input
+                          type="checkbox"
+                          className="mt-1 size-4 rounded border-white/20 accent-primary"
+                          checked={manageTopic.openForAuthors}
+                          disabled={isLoading(`topic-open-${manageTopic.id}`)}
+                          onChange={(event) => {
+                            const openForAuthors = event.target.checked;
+                            submit(
+                              `topic-open-${manageTopic.id}`,
+                              () =>
+                                notesApi.updateTopic(manageTopic.id, {
+                                  openForAuthors,
+                                }),
+                              openForAuthors
+                                ? "Topic opened for authors."
+                                : "Topic closed for authors.",
+                            );
+                          }}
+                        />
+                        <span className="space-y-1">
+                          <span className="block text-sm font-medium">
+                            Open for authors
+                          </span>
+                          <span className="block text-xs text-muted-foreground">
+                            Required for Write → Available topics.
+                          </span>
+                        </span>
+                      </label>
+
+                      <label className="flex items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
+                        <input
+                          type="checkbox"
+                          className="mt-1 size-4 rounded border-white/20 accent-primary"
+                          checked={manageTopic.published}
+                          disabled={isLoading(`topic-published-${manageTopic.id}`)}
+                          onChange={(event) => {
+                            const published = event.target.checked;
+                            submit(
+                              `topic-published-${manageTopic.id}`,
+                              () =>
+                                notesApi.updateTopic(manageTopic.id, {
+                                  published,
+                                }),
+                              published
+                                ? "Topic marked published."
+                                : "Topic marked draft.",
+                            );
+                          }}
+                        />
+                        <span className="space-y-1">
+                          <span className="block text-sm font-medium">Published</span>
+                          <span className="block text-xs text-muted-foreground">
+                            Unpublished topics stay hidden from public Notes.
+                          </span>
+                        </span>
+                      </label>
+                    </div>
                   </div>
                 )}
               </div>

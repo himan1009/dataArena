@@ -222,7 +222,19 @@ export const notesApi = {
     slug: string;
     description?: string;
     openForAuthors?: boolean;
+    published?: boolean;
   }) => notesRequest("/admin/topics", { method: "POST", body: payload }),
+
+  updateTopic: (
+    id: string,
+    payload: {
+      name?: string;
+      slug?: string;
+      description?: string;
+      published?: boolean;
+      openForAuthors?: boolean;
+    },
+  ) => notesRequest(`/admin/topics/${id}`, { method: "PATCH", body: payload }),
 
   createArticleAdmin: (payload: {
     topicId: string;

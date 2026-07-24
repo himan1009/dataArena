@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import type { AuthUser } from "@/lib/api";
 import { applySetCookiesFromResponse } from "@/lib/cookie-utils";
+import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { getBackendUrl } from "@/lib/proxy";
 
 export async function getCookieHeader(): Promise<string> {
@@ -21,7 +22,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   }
 
   try {
-    const response = await fetch(getBackendUrl("/auth/me"), {
+    const response = await fetchWithTimeout(getBackendUrl("/auth/me"), {
       headers: { cookie: cookieHeader },
       cache: "no-store",
     });
@@ -31,7 +32,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       return data.user;
     }
 
-    const refreshResponse = await fetch(getBackendUrl("/auth/refresh"), {
+    const refreshResponse = await fetchWithTimeout(getBackendUrl("/auth/refresh"), {
       method: "POST",
       headers: { cookie: cookieHeader },
       cache: "no-store",

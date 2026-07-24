@@ -32,6 +32,10 @@ async function bootstrap() {
 
   const port = configService.get<number>('PORT', 4000);
   await app.listen(port);
+  console.log(`API listening on http://localhost:${port}/api/v1`);
 }
 
-void bootstrap();
+bootstrap().catch((error: unknown) => {
+  console.error('Failed to start API:', error);
+  process.exit(1);
+});

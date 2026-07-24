@@ -396,26 +396,68 @@ NEXT_PUBLIC_API_URL="http://localhost:4000"
 
 ---
 
-### API crashes with Prisma / module errors
+### API crashes: `No native build was found` (bcrypt / webpack)
+
+**Cause:** `dist/main.js` was built with **webpack**, which breaks native modules like `bcrypt`.
 
 **Fix:**
 ```bash
 cd apps/api
-npx prisma generate
+rm -rf dist tsconfig.build.tsbuildinfo
+npm run start:dev:clean
+```
+
+Use `npm run start:dev` (tsc only). Do **not** run `nest build --webpack`.
+
+---
+
+### API crashes: `Cannot find module .../dist/main`
+
+**Cause:** Stale TypeScript incremental cache — `nest build` deletes `dist/` but an old `tsconfig.build.tsbuildinfo` file can make the compiler skip emitting files.
+
+**Fix:**
+```bash
+cd apps/api
+rm -f tsconfig.build.tsbuildinfo
 npm run build
 npm run start:dev
 ```
 
+You should see `dist/main.js` after `npm run build`. This is fixed in `tsconfig.build.json` (incremental builds disabled for production compile).
+
 ---
 
-### `docker compose` command not found
+### `docker compose` command not found / cannot connect to Docker
 
-**Cause:** Docker is not installed or not running.
+**Cause:** Docker is not installed, **Docker Desktop is not running**, or you ran `docker compose down` and stopped the database.
 
 **Fix:**
-1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-2. Start Docker Desktop
-3. Try again
+1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) if needed
+2. **Start Docker Desktop** and wait until it says “running”
+3. From the project root:
+   ```bash
+   docker compose up -d
+   docker compose ps
+   ```
+   You should see `dataarena-postgres` and `dataarena-redis` as **running**
+4. Restart the API: `cd apps/api && npm run start:dev`
+
+> **Note:** `docker compose down` stops the database. Your data stays in Docker volumes, but the API will fail until you run `docker compose up -d` again.
+
+---
+
+### Topics not visible in Write → Available topics
+
+**Cause:** A topic must meet all of these rules:
+
+| Requirement | How to fix (Admin → `/admin`) |
+|-------------|-------------------------------|
+| **Open for authors** is ON | Manage categories & topics → select topic → enable **Open for authors** |
+| Topic is **Published** | Same panel → enable **Published** |
+| No author draft already in progress | If an editor started writing, the topic moves to their **Written by you** list instead |
+| User has **Editor** or **Admin** role | Admin → Users → set role to **Editor** |
+
+New topics now default to **Open for authors** when you create them.
 
 ---
 
@@ -468,9 +510,9 @@ The **first user to register** automatically gets the `ADMIN` role. All subseque
 ### First time (run once)
 
 ```bash
-cd path/to/dataArena
+cd ~/Desktop/dataArena   # or your clone path
 docker compose up -d
-npm install && cd apps/api && npm install && cd ../web && npm install && cd ../..
+npm install
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env.local
 cd apps/api && npx prisma migrate deploy
@@ -478,19 +520,21 @@ cd apps/api && npx prisma migrate deploy
 
 ### Every day (3 terminals)
 
-**Terminal 1:**
+**Terminal 1 — database (must stay running):**
 ```bash
-cd path/to/dataArena && docker compose up -d
+cd ~/Desktop/dataArena && docker compose up -d
 ```
 
-**Terminal 2:**
+**Terminal 2 — API:**
 ```bash
-cd path/to/dataArena/apps/api && npm run start:dev
+cd ~/Desktop/dataArena/apps/api && npm run start:dev:clean
 ```
 
-**Terminal 3:**
+On later runs (after first successful start), `npm run start:dev` is enough.
+
+**Terminal 3 — frontend:**
 ```bash
-cd path/to/dataArena/apps/web && npm run dev
+cd ~/Desktop/dataArena/apps/web && npm run dev
 ```
 
 ### Stop
@@ -499,7 +543,7 @@ cd path/to/dataArena/apps/web && npm run dev
 # Terminals 2 & 3: Ctrl + C
 
 # Stop database:
-cd path/to/dataArena && docker compose down
+cd ~/Desktop/dataArena && docker compose down
 ```
 
 ### Open app

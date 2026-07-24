@@ -409,14 +409,18 @@ export class NotesService {
     });
 
     const available = topics.filter((topic) => {
-      const hasPublished = topic.articles.some(
+      const authorArticles = topic.articles.filter(
+        (article) => article.authorId != null,
+      );
+
+      const hasPublished = authorArticles.some(
         (article) => article.status === ArticleStatus.PUBLISHED,
       );
       if (hasPublished) {
         return false;
       }
 
-      const activeByOther = topic.articles.some(
+      const activeByOther = authorArticles.some(
         (article) =>
           article.authorId !== authorId &&
           (article.status === ArticleStatus.DRAFT ||
@@ -427,7 +431,7 @@ export class NotesService {
         return false;
       }
 
-      const myActive = topic.articles.some(
+      const myActive = authorArticles.some(
         (article) =>
           article.authorId === authorId &&
           (article.status === ArticleStatus.DRAFT ||
@@ -594,7 +598,9 @@ export class NotesService {
         );
       }
 
-      const activeArticle = topic.articles[0];
+      const activeArticle = topic.articles.find(
+        (article) => article.authorId != null,
+      );
       if (activeArticle) {
         throw new ConflictException('This topic already has an active article');
       }

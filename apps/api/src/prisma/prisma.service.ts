@@ -13,6 +13,7 @@ export class PrismaService
   constructor() {
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL,
+      connectionTimeoutMillis: 5_000,
     });
 
     super({ adapter: new PrismaPg(pool) });
