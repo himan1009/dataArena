@@ -1,0 +1,2 @@
+-- Placeholder migration (no schema changes).
+-- Keeps migration history consistent so later migrations can apply.

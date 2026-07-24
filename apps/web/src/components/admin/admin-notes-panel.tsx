@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Check, Trash2 } from "lucide-react";
 
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
@@ -94,9 +94,9 @@ export function AdminNotesPanel({
   const [manageCategoryId, setManageCategoryId] = useState(
     categories[0]?.id ?? "",
   );
-  const [manageTopicId, setManageTopicId] = useState(
-    categories[0]?.topics?.[0]?.id ?? "",
-  );
+  const [manageTopicId, setManageTopicId] = useState("");
+
+  const topicListRef = useRef<HTMLDivElement>(null);
 
   const manageCategory = useMemo(
     () => categories.find((category) => category.id === manageCategoryId),
@@ -128,10 +128,25 @@ export function AdminNotesPanel({
       return;
     }
 
-    if (!manageTopics.some((topic) => topic.id === manageTopicId)) {
-      setManageTopicId(manageTopics[0].id);
+    if (
+      manageTopicId &&
+      !manageTopics.some((topic) => topic.id === manageTopicId)
+    ) {
+      setManageTopicId("");
     }
   }, [manageTopics, manageTopicId]);
+
+  useEffect(() => {
+    if (!manageTopicId || !topicListRef.current) {
+      return;
+    }
+
+    const selected = topicListRef.current.querySelector(
+      `[data-topic-id="${manageTopicId}"]`,
+    );
+
+    selected?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [manageTopicId, manageCategoryId]);
 
   const handleError = (err: unknown) => {
     if (err instanceof ApiError) {
@@ -208,8 +223,11 @@ export function AdminNotesPanel({
 
   const handleCategoryChange = (categoryId: string) => {
     setManageCategoryId(categoryId);
-    const nextCategory = categories.find((category) => category.id === categoryId);
-    setManageTopicId(nextCategory?.topics?.[0]?.id ?? "");
+    setManageTopicId("");
+  };
+
+  const selectManageTopic = (topicId: string) => {
+    setManageTopicId((current) => (current === topicId ? "" : topicId));
   };
 
   const handleDeleteCategory = async () => {
@@ -619,87 +637,147 @@ export function AdminNotesPanel({
       <section className="glass-panel p-6 sm:p-8">
         <h3 className="font-semibold tracking-tight">Manage categories & topics</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Select a category and topic to publish settings or delete. Writer
-          assignments are managed separately under Assign writers.
+          Pick a category to delete it, or pick a category then tap one topic to
+          edit or delete that topic only.
         </p>
 
         {categories.length === 0 ? (
           <p className="mt-6 text-sm text-muted-foreground">No categories yet.</p>
         ) : (
           <div className="mt-6 space-y-6">
-            <div className="grid gap-4 lg:grid-cols-[14rem_minmax(0,1fr)]">
-              <div className="space-y-2">
-                <Label htmlFor="manage-category">Category</Label>
-                <SelectField
-                  id="manage-category"
-                  value={manageCategoryId}
-                  options={categoryOptions}
-                  onValueChange={handleCategoryChange}
-                  placeholder="Choose a category"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Topic</Label>
-                <div className="app-scrollbar max-h-56 overflow-y-auto rounded-xl border border-white/[0.08] bg-white/[0.02] p-2">
-                  {!manageTopics.length ? (
-                    <p className="px-2 py-3 text-sm text-muted-foreground">
-                      No topics in this category.
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 sm:p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Label htmlFor="manage-category">Category</Label>
+                  <SelectField
+                    id="manage-category"
+                    value={manageCategoryId}
+                    options={categoryOptions}
+                    onValueChange={handleCategoryChange}
+                    placeholder="Choose a category"
+                  />
+                  {manageCategory && (
+                    <p className="text-xs text-muted-foreground">
+                      /notes/{manageCategory.slug} ·{" "}
+                      {manageCategory.published ? "Published" : "Draft"} ·{" "}
+                      {manageCategory.topicCount ?? manageTopics.length} topics
                     </p>
-                  ) : (
-                    manageTopics.map((topic) => {
-                      const isSelected = topic.id === manageTopicId;
-
-                      return (
-                        <button
-                          key={topic.id}
-                          type="button"
-                          onClick={() => setManageTopicId(topic.id)}
-                          className={cn(
-                            "flex w-full flex-col rounded-lg px-3 py-2.5 text-left transition-colors",
-                            isSelected
-                              ? "bg-primary/10 text-foreground"
-                              : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground",
-                          )}
-                        >
-                          <span className="truncate text-sm font-medium">
-                            {topic.name}
-                          </span>
-                          <span className="mt-0.5 truncate text-xs opacity-80">
-                            {topic.slug}
-                          </span>
-                        </button>
-                      );
-                    })
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {manageTopics.length} topics — scroll to see all
-                </p>
+                <LoadingButton
+                  type="button"
+                  variant="outline"
+                  className="shrink-0 border-destructive/30 text-destructive hover:bg-destructive/10"
+                  loading={Boolean(
+                    manageCategory &&
+                      isLoading(`delete-category-${manageCategory.id}`),
+                  )}
+                  loadingLabel="Deleting category..."
+                  disabled={!manageCategory}
+                  onClick={handleDeleteCategory}
+                >
+                  <Trash2 className="size-4" />
+                  Delete category
+                </LoadingButton>
               </div>
             </div>
 
             {manageCategory && (
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-4">
-                <p className="text-sm font-medium">{manageCategory.name}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  /notes/{manageCategory.slug} ·{" "}
-                  {manageCategory.published ? "Published" : "Draft"} ·{" "}
-                  {manageCategory.topicCount ?? manageTopics.length} topics
-                </p>
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label>Topics in {manageCategory.name}</Label>
+                    {manageTopic && (
+                      <span className="truncate text-xs text-primary">
+                        Selected: {manageTopic.name}
+                      </span>
+                    )}
+                  </div>
+                  <div
+                    ref={topicListRef}
+                    className="app-scrollbar max-h-64 overflow-y-auto rounded-xl border border-white/[0.08] bg-white/[0.02] p-2"
+                  >
+                    {!manageTopics.length ? (
+                      <p className="px-2 py-3 text-sm text-muted-foreground">
+                        No topics in this category.
+                      </p>
+                    ) : (
+                      manageTopics.map((topic) => {
+                        const isSelected = topic.id === manageTopicId;
 
-                {manageTopic && (
-                  <div className="mt-4 space-y-4 border-t border-white/[0.06] pt-4">
-                    <div>
-                      <p className="text-sm font-medium">{manageTopic.name}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {manageTopic.slug} ·{" "}
-                        {manageTopic.published ? "Published" : "Draft"}
-                        {manageTopic.openForAuthors ? " · Open for authors" : ""}
+                        return (
+                          <button
+                            key={topic.id}
+                            type="button"
+                            data-topic-id={topic.id}
+                            onClick={() => selectManageTopic(topic.id)}
+                            className={cn(
+                              "mb-1 flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors last:mb-0",
+                              isSelected
+                                ? "border-primary/40 bg-primary/10 text-foreground ring-1 ring-primary/20"
+                                : "border-transparent text-muted-foreground hover:border-white/[0.06] hover:bg-white/[0.04] hover:text-foreground",
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border",
+                                isSelected
+                                  ? "border-primary bg-primary text-primary-foreground"
+                                  : "border-white/15 bg-white/[0.03]",
+                              )}
+                            >
+                              {isSelected && <Check className="size-3" />}
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-medium">
+                                {topic.name}
+                              </span>
+                              <span className="mt-0.5 block truncate text-xs opacity-80">
+                                {topic.slug}
+                                {topic.published ? " · Published" : " · Draft"}
+                                {topic.openForAuthors ? " · Open" : ""}
+                              </span>
+                            </span>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {manageTopics.length} topics — scroll and tap one to select.
+                    Tap again to deselect.
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 sm:p-5">
+                  {!manageTopic ? (
+                    <div className="flex h-full min-h-48 flex-col items-center justify-center text-center">
+                      <p className="text-sm font-medium text-muted-foreground">
+                        No topic selected
+                      </p>
+                      <p className="mt-2 max-w-xs text-xs text-muted-foreground">
+                        Select a topic from the list to change publish settings
+                        or delete that topic. Category delete works without
+                        selecting a topic.
                       </p>
                     </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="border-b border-white/[0.06] pb-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+                          Selected topic
+                        </p>
+                        <p className="mt-2 text-lg font-semibold">
+                          {manageTopic.name}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {manageCategory.name} · {manageTopic.slug} ·{" "}
+                          {manageTopic.published ? "Published" : "Draft"}
+                          {manageTopic.openForAuthors ? " · Open for authors" : ""}
+                        </p>
+                      </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="grid gap-3 sm:grid-cols-1">
                       <label className="flex items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
                         <input
                           type="checkbox"
@@ -758,47 +836,29 @@ export function AdminNotesPanel({
                           </span>
                         </span>
                       </label>
+                      </div>
+
+                      <LoadingButton
+                        type="button"
+                        variant="outline"
+                        className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                        loading={isLoading(`delete-topic-${manageTopic.id}`)}
+                        loadingLabel="Deleting topic..."
+                        onClick={handleDeleteTopic}
+                      >
+                        <Trash2 className="size-4" />
+                        Delete &quot;{manageTopic.name}&quot;
+                      </LoadingButton>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             )}
 
-            <div className="flex flex-wrap gap-3">
-              <LoadingButton
-                type="button"
-                variant="outline"
-                className="border-destructive/30 text-destructive hover:bg-destructive/10"
-                loading={Boolean(
-                  manageCategory && isLoading(`delete-category-${manageCategory.id}`),
-                )}
-                loadingLabel="Deleting category..."
-                disabled={!manageCategory}
-                onClick={handleDeleteCategory}
-              >
-                <Trash2 className="size-4" />
-                Delete category
-              </LoadingButton>
-
-              <LoadingButton
-                type="button"
-                variant="outline"
-                className="border-destructive/30 text-destructive hover:bg-destructive/10"
-                loading={Boolean(
-                  manageTopic && isLoading(`delete-topic-${manageTopic.id}`),
-                )}
-                loadingLabel="Deleting topic..."
-                disabled={!manageTopic}
-                onClick={handleDeleteTopic}
-              >
-                <Trash2 className="size-4" />
-                Delete topic
-              </LoadingButton>
-            </div>
-
             {!manageTopic && manageCategory && manageTopics.length === 0 && (
               <p className="text-sm text-muted-foreground">
-                This category has no topics yet. You can still delete the whole category.
+                This category has no topics yet. You can still delete the whole
+                category above.
               </p>
             )}
           </div>
