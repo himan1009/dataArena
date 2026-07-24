@@ -27,6 +27,7 @@ export type AvailableTopic = {
     slug: string;
   };
   claimedBy: { id: string; name: string | null } | null;
+  assignedAuthor?: { id: string; name: string | null } | null;
 };
 
 export type MyArticle = {
@@ -235,6 +236,12 @@ export const notesApi = {
       openForAuthors?: boolean;
     },
   ) => notesRequest(`/admin/topics/${id}`, { method: "PATCH", body: payload }),
+
+  assignTopicAuthor: (id: string, authorId: string | null) =>
+    notesRequest<{ topic: unknown; message: string }>(
+      `/admin/topics/${id}/assign-author`,
+      { method: "PATCH", body: { authorId } },
+    ),
 
   createArticleAdmin: (payload: {
     topicId: string;

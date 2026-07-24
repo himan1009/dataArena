@@ -177,6 +177,12 @@ export async function getAdminCategories() {
         slug: string;
         published: boolean;
         openForAuthors: boolean;
+        assignedAuthorId: string | null;
+        assignedAuthor: {
+          id: string;
+          name: string | null;
+          email: string;
+        } | null;
       }>;
       _count: { topics: number };
     }>;

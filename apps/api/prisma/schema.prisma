@@ -42,6 +42,7 @@ model User {
   refreshTokens RefreshToken[]
   articles      Article[]
   claimedTopics Topic[]        @relation("ClaimedTopics")
+  assignedTopics Topic[]       @relation("AssignedTopicAuthors")
   editRequestsMade Article[]   @relation("EditRequestsBy")
   editAssignments  Article[]   @relation("EditAssignments")
   articlesLastEdited Article[] @relation("ArticleLastEditor")
@@ -88,19 +89,22 @@ model Topic {
   description    String?
   sortOrder      Int         @default(0)
   published      Boolean     @default(true)
-  openForAuthors Boolean     @default(false)
-  status         TopicStatus @default(OPEN)
-  claimedById    String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  openForAuthors    Boolean     @default(false)
+  status            TopicStatus @default(OPEN)
+  claimedById       String?
+  assignedAuthorId  String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 
-  category  Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  claimedBy User?     @relation("ClaimedTopics", fields: [claimedById], references: [id], onDelete: SetNull)
-  articles  Article[]
+  category       Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  claimedBy      User?    @relation("ClaimedTopics", fields: [claimedById], references: [id], onDelete: SetNull)
+  assignedAuthor User?    @relation("AssignedTopicAuthors", fields: [assignedAuthorId], references: [id], onDelete: SetNull)
+  articles       Article[]
 
   @@unique([categoryId, slug])
   @@index([categoryId])
   @@index([claimedById])
+  @@index([assignedAuthorId])
   @@map("topics")
 }
 

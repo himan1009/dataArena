@@ -28,6 +28,7 @@ import {
   CreateArticleDto,
   CreateCategoryDto,
   CreateTopicDto,
+  AssignTopicAuthorDto,
   UpdateArticleDto,
   UpdateCategoryDto,
   UpdateTopicDto,
@@ -249,6 +250,16 @@ export class NotesController {
   @Roles('ADMIN')
   updateTopic(@Param('id') id: string, @Body() dto: UpdateTopicDto) {
     return this.notesService.updateTopic(id, dto);
+  }
+
+  @Patch('admin/topics/:id/assign-author')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  assignTopicAuthor(
+    @Param('id') id: string,
+    @Body() dto: AssignTopicAuthorDto,
+  ) {
+    return this.notesService.assignTopicAuthor(id, dto.authorId ?? null);
   }
 
   @Delete('admin/topics/:id')

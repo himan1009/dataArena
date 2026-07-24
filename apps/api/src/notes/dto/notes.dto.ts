@@ -124,6 +124,12 @@ export class UpdateTopicDto {
   openForAuthors?: boolean;
 }
 
+export class AssignTopicAuthorDto {
+  @IsOptional()
+  @IsString()
+  authorId?: string | null;
+}
+
 export class CreateArticleDto {
   @IsString()
   @IsNotEmpty()

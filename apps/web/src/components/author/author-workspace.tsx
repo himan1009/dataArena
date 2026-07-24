@@ -197,9 +197,33 @@ export function AuthorWorkspace({
       )}
 
       <section>
+        <h3 className="text-lg font-semibold tracking-tight">
+          Written by you
+          {writtenBy.length > 0 && (
+            <span className="ml-2 text-sm font-normal text-muted-foreground">
+              ({writtenBy.length})
+            </span>
+          )}
+        </h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Your drafts and submissions appear first. Continue writing before picking
+          new topics.
+        </p>
+        <div className="mt-5 space-y-3">
+          {writtenBy.map((article) => renderArticleCard(article, "written"))}
+          {writtenBy.length === 0 && (
+            <div className="glass-panel p-6 text-sm text-muted-foreground">
+              No drafts yet. When admin assigns you a topic, it will appear below
+              under Available topics.
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section>
         <h3 className="text-lg font-semibold tracking-tight">Available topics</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Pick a topic prepared by admin and start your article.
+          Topics admin assigned to you. Only you can start writing these.
         </p>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           {topics.map((topic) => (
@@ -229,29 +253,8 @@ export function AuthorWorkspace({
           ))}
           {topics.length === 0 && (
             <div className="glass-panel p-6 text-sm text-muted-foreground sm:col-span-2">
-              No open topics right now. Check back after admin adds more.
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section>
-        <h3 className="text-lg font-semibold tracking-tight">
-          Written by you
-          {writtenBy.length > 0 && (
-            <span className="ml-2 text-sm font-normal text-muted-foreground">
-              ({writtenBy.length})
-            </span>
-          )}
-        </h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Articles you originally wrote. If you edit your own article later, it stays here.
-        </p>
-        <div className="mt-5 space-y-3">
-          {writtenBy.map((article) => renderArticleCard(article, "written"))}
-          {writtenBy.length === 0 && (
-            <div className="glass-panel p-6 text-sm text-muted-foreground">
-              You have not started any articles yet.
+              No topics assigned to you yet. Ask admin to assign topics under Admin →
+              Manage categories & topics.
             </div>
           )}
         </div>

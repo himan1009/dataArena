@@ -31,7 +31,7 @@ export default async function WritePage() {
           icon={PenLine}
           label="Author workspace"
           title="Write articles"
-          description="Pick a topic, write with the visual editor, and submit for admin review."
+          description="Continue your drafts, then pick topics admin assigned to you."
         />
 
         <Link

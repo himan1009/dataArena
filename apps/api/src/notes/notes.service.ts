@@ -393,13 +393,14 @@ export class NotesService {
       where: {
         openForAuthors: true,
         published: true,
+        assignedAuthorId: authorId,
       },
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       include: {
         category: {
           select: { id: true, name: true, slug: true },
         },
-        claimedBy: {
+        assignedAuthor: {
           select: { id: true, name: true },
         },
         articles: {
@@ -420,17 +421,6 @@ export class NotesService {
         return false;
       }
 
-      const activeByOther = authorArticles.some(
-        (article) =>
-          article.authorId !== authorId &&
-          (article.status === ArticleStatus.DRAFT ||
-            article.status === ArticleStatus.SUBMITTED ||
-            article.status === ArticleStatus.CHANGES_REQUESTED),
-      );
-      if (activeByOther) {
-        return false;
-      }
-
       const myActive = authorArticles.some(
         (article) =>
           article.authorId === authorId &&
@@ -442,7 +432,14 @@ export class NotesService {
         return false;
       }
 
-      if (topic.claimedById && topic.claimedById !== authorId) {
+      const activeByOther = authorArticles.some(
+        (article) =>
+          article.authorId !== authorId &&
+          (article.status === ArticleStatus.DRAFT ||
+            article.status === ArticleStatus.SUBMITTED ||
+            article.status === ArticleStatus.CHANGES_REQUESTED),
+      );
+      if (activeByOther) {
         return false;
       }
 
@@ -457,7 +454,7 @@ export class NotesService {
         description: topic.description,
         status: topic.status,
         category: topic.category,
-        claimedBy: topic.claimedBy,
+        assignedAuthor: topic.assignedAuthor,
       })),
     };
   }
@@ -491,6 +488,27 @@ export class NotesService {
         include,
       }),
     ]);
+
+    const statusRank = (status: ArticleStatus) => {
+      if (
+        status === ArticleStatus.DRAFT ||
+        status === ArticleStatus.CHANGES_REQUESTED
+      ) {
+        return 0;
+      }
+      if (status === ArticleStatus.SUBMITTED) {
+        return 1;
+      }
+      return 2;
+    };
+
+    writtenBy.sort((a, b) => {
+      const byStatus = statusRank(a.status) - statusRank(b.status);
+      if (byStatus !== 0) {
+        return byStatus;
+      }
+      return b.updatedAt.getTime() - a.updatedAt.getTime();
+    });
 
     const mapArticle = (article: (typeof writtenBy)[number]) => ({
       id: article.id,
@@ -590,6 +608,12 @@ export class NotesService {
 
       if (!topic || !topic.openForAuthors) {
         throw new NotFoundException('Topic not available for writing');
+      }
+
+      if (topic.assignedAuthorId !== authorId) {
+        throw new ForbiddenException(
+          'You are not assigned to write this topic. Ask admin for access.',
+        );
       }
 
       if (topic.claimedById && topic.claimedById !== authorId) {
@@ -1070,6 +1094,10 @@ export class NotesService {
             slug: true,
             published: true,
             openForAuthors: true,
+            assignedAuthorId: true,
+            assignedAuthor: {
+              select: { id: true, name: true, email: true },
+            },
           },
         },
         _count: {
@@ -1140,6 +1168,72 @@ export class NotesService {
     return this.prisma.topic
       .update({ where: { id }, data: dto })
       .catch(this.handleNotFound('Topic not found'));
+  }
+
+  async assignTopicAuthor(topicId: string, authorId: string | null) {
+    const topic = await this.prisma.topic.findUnique({
+      where: { id: topicId },
+      include: {
+        articles: {
+          where: {
+            authorId: { not: null },
+            status: {
+              in: [
+                ArticleStatus.DRAFT,
+                ArticleStatus.SUBMITTED,
+                ArticleStatus.CHANGES_REQUESTED,
+              ],
+            },
+          },
+          select: { id: true, authorId: true, status: true },
+        },
+      },
+    });
+
+    if (!topic) {
+      throw new NotFoundException('Topic not found');
+    }
+
+    if (authorId) {
+      const author = await this.prisma.user.findFirst({
+        where: {
+          id: authorId,
+          isActive: true,
+          role: { in: [Role.EDITOR, Role.ADMIN] },
+        },
+        select: { id: true },
+      });
+
+      if (!author) {
+        throw new BadRequestException(
+          'Selected user is not an active editor or admin',
+        );
+      }
+
+      const blocked = topic.articles.some(
+        (article) => article.authorId !== authorId,
+      );
+      if (blocked) {
+        throw new ConflictException(
+          'Another author already has an active article on this topic. Resolve or delete that draft before reassigning.',
+        );
+      }
+    }
+
+    const updated = await this.prisma.topic.update({
+      where: { id: topicId },
+      data: { assignedAuthorId: authorId },
+      include: {
+        assignedAuthor: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+    });
+
+    return {
+      topic: updated,
+      message: authorId ? 'Writing access assigned' : 'Writing access removed',
+    };
   }
 
   deleteTopic(id: string) {
