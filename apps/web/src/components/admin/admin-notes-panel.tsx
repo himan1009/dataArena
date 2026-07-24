@@ -31,6 +31,34 @@ type AdminCategory = {
   topics?: AdminTopic[];
 };
 
+const initialCategoryForm = {
+  name: "",
+  slug: "",
+  description: "",
+  icon: "BookOpen",
+};
+
+const initialArticleContent = "# New article\n\nStart writing markdown here.";
+
+function createInitialTopicForm(categoryId = "") {
+  return {
+    categoryId,
+    name: "",
+    slug: "",
+    description: "",
+    openForAuthors: true,
+  };
+}
+
+function createInitialArticleForm(topicId = "") {
+  return {
+    topicId,
+    title: "",
+    slug: "",
+    content: initialArticleContent,
+  };
+}
+
 export function AdminNotesPanel({
   categories,
 }: {
@@ -41,20 +69,11 @@ export function AdminNotesPanel({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const [categoryForm, setCategoryForm] = useState({
-    name: "",
-    slug: "",
-    description: "",
-    icon: "BookOpen",
-  });
+  const [categoryForm, setCategoryForm] = useState(initialCategoryForm);
 
-  const [topicForm, setTopicForm] = useState({
-    categoryId: categories[0]?.id ?? "",
-    name: "",
-    slug: "",
-    description: "",
-    openForAuthors: true,
-  });
+  const [topicForm, setTopicForm] = useState(() =>
+    createInitialTopicForm(categories[0]?.id ?? ""),
+  );
 
   const allTopics = useMemo(
     () =>
@@ -67,12 +86,9 @@ export function AdminNotesPanel({
     [categories],
   );
 
-  const [articleForm, setArticleForm] = useState({
-    topicId: allTopics[0]?.id ?? "",
-    title: "",
-    slug: "",
-    content: "# New article\n\nStart writing markdown here.",
-  });
+  const [articleForm, setArticleForm] = useState(() =>
+    createInitialArticleForm(allTopics[0]?.id ?? ""),
+  );
 
   const [manageCategoryId, setManageCategoryId] = useState(
     categories[0]?.id ?? "",
@@ -179,13 +195,15 @@ export function AdminNotesPanel({
     key: string,
     action: () => Promise<unknown>,
     successMessage = "Saved successfully.",
+    onSuccess?: (result: unknown) => void,
   ) => {
     setMessage(null);
     setError(null);
 
     try {
-      await run(key, action);
+      const result = await run(key, action);
       setMessage(successMessage);
+      onSuccess?.(result);
       router.refresh();
     } catch (err) {
       handleError(err);
@@ -293,13 +311,24 @@ export function AdminNotesPanel({
           className="mt-6 grid gap-4 sm:grid-cols-2"
           onSubmit={(event) => {
             event.preventDefault();
-            submit("category", () =>
-              notesApi.createCategory({
-                name: categoryForm.name,
-                slug: categoryForm.slug || slugify(categoryForm.name),
-                description: categoryForm.description || undefined,
-                icon: categoryForm.icon || undefined,
-              }),
+            submit(
+              "category",
+              () =>
+                notesApi.createCategory({
+                  name: categoryForm.name,
+                  slug: categoryForm.slug || slugify(categoryForm.name),
+                  description: categoryForm.description || undefined,
+                  icon: categoryForm.icon || undefined,
+                }),
+              "Category created.",
+              (result) => {
+                setCategoryForm(initialCategoryForm);
+                const created = result as { id?: string } | undefined;
+                if (created?.id) {
+                  setTopicForm(createInitialTopicForm(created.id));
+                  setManageCategoryId(created.id);
+                }
+              },
             );
           }}
         >
@@ -366,14 +395,25 @@ export function AdminNotesPanel({
           className="mt-6 grid gap-4 sm:grid-cols-2"
           onSubmit={(event) => {
             event.preventDefault();
-            submit("topic", () =>
-              notesApi.createTopic({
-                categoryId: topicForm.categoryId,
-                name: topicForm.name,
-                slug: topicForm.slug || slugify(topicForm.name),
-                description: topicForm.description || undefined,
-                openForAuthors: topicForm.openForAuthors,
-              }),
+            submit(
+              "topic",
+              () =>
+                notesApi.createTopic({
+                  categoryId: topicForm.categoryId,
+                  name: topicForm.name,
+                  slug: topicForm.slug || slugify(topicForm.name),
+                  description: topicForm.description || undefined,
+                  openForAuthors: topicForm.openForAuthors,
+                }),
+              "Topic created.",
+              (result) => {
+                const created = result as { id?: string } | undefined;
+                setTopicForm(createInitialTopicForm(topicForm.categoryId));
+                if (created?.id) {
+                  setManageCategoryId(topicForm.categoryId);
+                  setManageTopicId(created.id);
+                }
+              },
             );
           }}
         >
@@ -483,13 +523,19 @@ export function AdminNotesPanel({
           className="mt-6 grid gap-4"
           onSubmit={(event) => {
             event.preventDefault();
-            submit("article", () =>
-              notesApi.createArticleAdmin({
-                topicId: articleForm.topicId,
-                title: articleForm.title,
-                slug: articleForm.slug || slugify(articleForm.title),
-                content: articleForm.content,
-              }),
+            submit(
+              "article",
+              () =>
+                notesApi.createArticleAdmin({
+                  topicId: articleForm.topicId,
+                  title: articleForm.title,
+                  slug: articleForm.slug || slugify(articleForm.title),
+                  content: articleForm.content,
+                }),
+              "Article created.",
+              () => {
+                setArticleForm(createInitialArticleForm(articleForm.topicId));
+              },
             );
           }}
         >
