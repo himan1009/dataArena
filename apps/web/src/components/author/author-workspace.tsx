@@ -254,7 +254,7 @@ export function AuthorWorkspace({
           {topics.length === 0 && (
             <div className="glass-panel p-6 text-sm text-muted-foreground sm:col-span-2">
               No topics assigned to you yet. Ask admin to assign topics under Admin →
-              Manage categories & topics.
+              Assign writers.
             </div>
           )}
         </div>

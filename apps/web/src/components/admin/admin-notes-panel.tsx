@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SelectField } from "@/components/ui/select-field";
 import { useAsyncAction } from "@/hooks/use-async-action";
-import { ApiError, notesApi, type AuthorSummary } from "@/lib/notes-api";
+import { ApiError, notesApi } from "@/lib/notes-api";
 import { slugify } from "@/lib/notes-utils";
+import { cn } from "@/lib/utils";
 
 type AdminTopic = {
   id: string;
@@ -18,12 +19,6 @@ type AdminTopic = {
   slug: string;
   published: boolean;
   openForAuthors: boolean;
-  assignedAuthorId: string | null;
-  assignedAuthor: {
-    id: string;
-    name: string | null;
-    email: string;
-  } | null;
 };
 
 type AdminCategory = {
@@ -74,7 +69,6 @@ export function AdminNotesPanel({
   const { run, isLoading } = useAsyncAction();
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [editors, setEditors] = useState<AuthorSummary[]>([]);
 
   const [categoryForm, setCategoryForm] = useState(initialCategoryForm);
 
@@ -115,27 +109,6 @@ export function AdminNotesPanel({
     () => manageTopics.find((topic) => topic.id === manageTopicId),
     [manageTopics, manageTopicId],
   );
-
-  useEffect(() => {
-    let cancelled = false;
-
-    notesApi
-      .getAdminEditors()
-      .then((data) => {
-        if (!cancelled) {
-          setEditors(data.editors);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setEditors([]);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     if (!categories.length) {
@@ -180,22 +153,6 @@ export function AdminNotesPanel({
         label: `${topic.categoryName} · ${topic.name}`,
       })),
     [allTopics],
-  );
-
-  const manageTopicOptions = useMemo(
-    () => manageTopics.map((topic) => ({ value: topic.id, label: topic.name })),
-    [manageTopics],
-  );
-
-  const editorOptions = useMemo(
-    () => [
-      { value: "", label: "Unassigned" },
-      ...editors.map((editor) => ({
-        value: editor.id,
-        label: editor.name || editor.email,
-      })),
-    ],
-    [editors],
   );
 
   useEffect(() => {
@@ -538,8 +495,8 @@ export function AdminNotesPanel({
             <span className="space-y-1">
               <span className="block text-sm font-medium">Open for authors</span>
               <span className="block text-xs text-muted-foreground">
-                Editors only see topics you assign to them under Write → Available
-                topics.
+                Editors can write this topic after you assign them under Admin →
+                Assign writers.
               </span>
             </span>
           </label>
@@ -662,15 +619,15 @@ export function AdminNotesPanel({
       <section className="glass-panel p-6 sm:p-8">
         <h3 className="font-semibold tracking-tight">Manage categories & topics</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Select a category, then choose a topic to review or delete. Deleting a
-          category removes all of its topics and articles.
+          Select a category and topic to publish settings or delete. Writer
+          assignments are managed separately under Assign writers.
         </p>
 
         {categories.length === 0 ? (
           <p className="mt-6 text-sm text-muted-foreground">No categories yet.</p>
         ) : (
           <div className="mt-6 space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-[14rem_minmax(0,1fr)]">
               <div className="space-y-2">
                 <Label htmlFor="manage-category">Category</Label>
                 <SelectField
@@ -683,15 +640,42 @@ export function AdminNotesPanel({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="manage-topic">Topic</Label>
-                <SelectField
-                  id="manage-topic"
-                  value={manageTopicId}
-                  options={manageTopicOptions}
-                  onValueChange={setManageTopicId}
-                  placeholder="Choose a topic"
-                  disabled={!manageTopics.length}
-                />
+                <Label>Topic</Label>
+                <div className="app-scrollbar max-h-56 overflow-y-auto rounded-xl border border-white/[0.08] bg-white/[0.02] p-2">
+                  {!manageTopics.length ? (
+                    <p className="px-2 py-3 text-sm text-muted-foreground">
+                      No topics in this category.
+                    </p>
+                  ) : (
+                    manageTopics.map((topic) => {
+                      const isSelected = topic.id === manageTopicId;
+
+                      return (
+                        <button
+                          key={topic.id}
+                          type="button"
+                          onClick={() => setManageTopicId(topic.id)}
+                          className={cn(
+                            "flex w-full flex-col rounded-lg px-3 py-2.5 text-left transition-colors",
+                            isSelected
+                              ? "bg-primary/10 text-foreground"
+                              : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground",
+                          )}
+                        >
+                          <span className="truncate text-sm font-medium">
+                            {topic.name}
+                          </span>
+                          <span className="mt-0.5 truncate text-xs opacity-80">
+                            {topic.slug}
+                          </span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {manageTopics.length} topics — scroll to see all
+                </p>
               </div>
             </div>
 
@@ -712,35 +696,6 @@ export function AdminNotesPanel({
                         {manageTopic.slug} ·{" "}
                         {manageTopic.published ? "Published" : "Draft"}
                         {manageTopic.openForAuthors ? " · Open for authors" : ""}
-                        {manageTopic.assignedAuthor
-                          ? ` · Assigned to ${manageTopic.assignedAuthor.name || manageTopic.assignedAuthor.email}`
-                          : " · No writer assigned"}
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="manage-topic-author">Assigned writer</Label>
-                      <SelectField
-                        id="manage-topic-author"
-                        value={manageTopic.assignedAuthorId ?? ""}
-                        options={editorOptions}
-                        disabled={isLoading(`topic-assign-${manageTopic.id}`)}
-                        onValueChange={(value) => {
-                          const authorId = value || null;
-                          submit(
-                            `topic-assign-${manageTopic.id}`,
-                            () => notesApi.assignTopicAuthor(manageTopic.id, authorId),
-                            authorId
-                              ? "Writer assigned to this topic."
-                              : "Writer assignment removed.",
-                          );
-                        }}
-                        placeholder="Choose an editor"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Only the assigned editor can start or continue writing this
-                        topic. Turn on &quot;Open for authors&quot; so it appears in
-                        their Write workspace.
                       </p>
                     </div>
 
@@ -770,8 +725,8 @@ export function AdminNotesPanel({
                             Open for authors
                           </span>
                           <span className="block text-xs text-muted-foreground">
-                            Required for Write → Available topics. Admin must also
-                            assign a writer.
+                            Required for Write → Available topics. Assign a writer
+                            on the Assign writers page.
                           </span>
                         </span>
                       </label>

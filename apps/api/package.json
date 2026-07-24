@@ -6,10 +6,10 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
+    "build": "rm -rf dist && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "start:dev": "nest start --watch --builder tsc",
+    "start:dev": "npm run build && nest start --watch --builder tsc",
     "start:dev:clean": "rm -rf dist tsconfig.build.tsbuildinfo && npm run build && nest start --watch --builder tsc",
     "start:debug": "nest start --debug --watch --builder tsc",
     "start:prod": "node dist/main",

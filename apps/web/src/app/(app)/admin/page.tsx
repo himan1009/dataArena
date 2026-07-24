@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Shield, ClipboardCheck, Users, BookOpen, Inbox, BookOpenCheck } from "lucide-react";
+import { Shield, ClipboardCheck, Users, BookOpen, Inbox, BookOpenCheck, UserPen } from "lucide-react";
 
 import { AdminNotesPanel } from "@/components/admin/admin-notes-panel";
 import { AppPage } from "@/components/ui/app-page";
@@ -15,6 +15,12 @@ export const metadata = {
 };
 
 const adminLinks = [
+  {
+    title: "Assign writers",
+    description: "Assign each topic to one editor. Only assigned writers can start that article.",
+    href: "/admin/assignments",
+    icon: UserPen,
+  },
   {
     title: "Reviews",
     description: "Approve submissions, assign editors for edit requests, and publish articles.",

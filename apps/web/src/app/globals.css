@@ -214,7 +214,7 @@
   }
 
   .app-select-popup {
-    @apply z-[200] max-h-72 min-w-[var(--anchor-width)] overflow-hidden rounded-xl border border-white/10 bg-card text-foreground shadow-[0_16px_50px_-20px_rgba(0,0,0,0.75)] backdrop-blur-xl origin-[var(--transform-origin)] transition-[transform,opacity] duration-200 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0;
+    @apply z-[200] max-h-72 min-w-[var(--anchor-width)] overflow-y-auto rounded-xl border border-white/10 bg-card text-foreground shadow-[0_16px_50px_-20px_rgba(0,0,0,0.75)] backdrop-blur-xl origin-[var(--transform-origin)] transition-[transform,opacity] duration-200 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0;
   }
 
   .app-select-item {

@@ -10,6 +10,7 @@ import {
   Search,
   Settings,
   Shield,
+  UserPen,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -93,6 +94,13 @@ export const secondaryNavItems: NavItem[] = [
     href: "/admin/reviews",
     icon: ClipboardCheck,
     description: "Author submission queue",
+    adminOnly: true,
+  },
+  {
+    title: "Assign writers",
+    href: "/admin/assignments",
+    icon: UserPen,
+    description: "Topic writer assignments",
     adminOnly: true,
   },
   {

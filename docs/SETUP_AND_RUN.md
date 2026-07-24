@@ -413,17 +413,17 @@ Use `npm run start:dev` (tsc only). Do **not** run `nest build --webpack`.
 
 ### API crashes: `Cannot find module .../dist/main`
 
-**Cause:** Stale TypeScript incremental cache — `nest build` deletes `dist/` but an old `tsconfig.build.tsbuildinfo` file can make the compiler skip emitting files.
+**Cause (watch mode):** Nest deleted `dist/` on every file save, then tried to restart before TypeScript finished rebuilding.
+
+**Cause (stale cache):** Old `tsconfig.build.tsbuildinfo` can make the compiler skip emitting files.
 
 **Fix:**
 ```bash
 cd apps/api
-rm -f tsconfig.build.tsbuildinfo
-npm run build
-npm run start:dev
+npm run start:dev:clean
 ```
 
-You should see `dist/main.js` after `npm run build`. This is fixed in `tsconfig.build.json` (incremental builds disabled for production compile).
+On later runs, `npm run start:dev` is enough. You should see `dist/main.js` after `npm run build`.
 
 ---
 
