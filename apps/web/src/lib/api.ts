@@ -41,9 +41,15 @@ export async function apiRequest<T>(
           ? data.message.join(", ")
           : typeof data.error === "string"
             ? data.error
-            : response.status === 500
-              ? "Server error. Check that the API is running on port 4000."
-              : "Request failed";
+            : response.status === 522 ||
+                response.status === 502 ||
+                response.status === 504
+              ? "API server timed out (often asleep on Render free tier). Open your API URL in a new tab, wait up to 60 seconds, then try login again."
+              : response.status === 503
+                ? "Cannot reach the API server. If using production, wake Render first. If local, run: cd apps/api && npm run start:dev"
+                : response.status === 500
+                  ? "Server error. Check Render logs or run database migrations."
+                  : "Request failed";
 
     throw new ApiError(message, response.status, data);
   }
