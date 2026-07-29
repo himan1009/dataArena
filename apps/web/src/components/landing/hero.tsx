@@ -4,8 +4,10 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
+  ArrowUpRight,
   BookOpen,
   Bot,
+  Briefcase,
   Check,
   Code2,
 } from "lucide-react";
@@ -13,6 +15,7 @@ import {
 import { PageContainer } from "@/components/ui/page-container";
 import { buttonVariants } from "@/components/ui/button";
 import type { AuthUser } from "@/lib/api";
+import { getAuthGatedHref } from "@/lib/auth-links";
 import { cn } from "@/lib/utils";
 
 const stats = [
@@ -127,29 +130,65 @@ export function Hero({ user }: { user: AuthUser | null }) {
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   {[
-                    { icon: BookOpen, label: "Notes", value: "Categories & articles", tint: "gold" as const },
-                    { icon: Code2, label: "Practice", value: "SQL · Python · Spark", tint: "teal" as const },
-                    { icon: Bot, label: "AI Copilot", value: "Explain & debug", tint: "primary" as const },
-                    { icon: BookOpen, label: "Write", value: "Publish & get credit", tint: "violet" as const },
-                  ].map((item) => (
-                    <div
-                      key={item.label}
-                      className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4"
-                    >
-                      <item.icon
+                    {
+                      icon: BookOpen,
+                      label: "Notes",
+                      value: "Categories & articles",
+                      tint: "gold" as const,
+                      href: "/notes",
+                    },
+                    {
+                      icon: Briefcase,
+                      label: "Interviews",
+                      value: "Community experiences",
+                      tint: "teal" as const,
+                      href: "/interviews",
+                    },
+                    { icon: Code2, label: "Practice", value: "SQL · Python · Spark", tint: "primary" as const },
+                    { icon: Bot, label: "AI Copilot", value: "Explain & debug", tint: "violet" as const },
+                  ].map((item) => {
+                    const href =
+                      "href" in item && item.href
+                        ? getAuthGatedHref(user, item.href)
+                        : null;
+
+                    const tile = (
+                      <div
                         className={cn(
-                          "size-4",
-                          item.tint === "gold" && "text-gold",
-                          item.tint === "teal" && "text-teal",
-                          item.tint === "primary" && "text-primary",
-                          item.tint === "violet" && "text-violet",
+                          "rounded-lg border border-white/[0.06] bg-white/[0.02] p-4",
+                          href && "transition-colors hover:border-white/[0.12] hover:bg-white/[0.04]",
                         )}
-                      />
-                    <p className="mt-2.5 text-sm font-medium">{item.label}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{item.value}</p>
-                  </div>
-                ))}
-              </div>
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <item.icon
+                            className={cn(
+                              "size-4",
+                              item.tint === "gold" && "text-gold",
+                              item.tint === "teal" && "text-teal",
+                              item.tint === "primary" && "text-primary",
+                              item.tint === "violet" && "text-violet",
+                            )}
+                          />
+                          {href && (
+                            <ArrowUpRight className="size-3.5 text-muted-foreground" />
+                          )}
+                        </div>
+                        <p className="mt-2.5 text-sm font-medium">{item.label}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{item.value}</p>
+                      </div>
+                    );
+
+                    if (!href) {
+                      return <div key={item.label}>{tile}</div>;
+                    }
+
+                    return (
+                      <Link key={item.label} href={href} className="block">
+                        {tile}
+                      </Link>
+                    );
+                  })}
+                </div>
 
               <p className="mt-4 rounded-lg border border-gold/15 bg-gradient-to-r from-gold-muted via-primary/[0.06] to-teal-muted px-4 py-3 text-sm text-muted-foreground">
                 Stop switching between docs, LeetCode, and ChatGPT. Do the work here.

@@ -3,7 +3,17 @@ import type { NextRequest } from "next/server";
 
 import { protectedRoutes } from "@/config/app-navigation";
 
+const interviewProtectedPrefixes = ["/interviews/share", "/interviews/my"];
+
 function isProtectedRoute(pathname: string) {
+  if (
+    interviewProtectedPrefixes.some(
+      (route) => pathname === route || pathname.startsWith(`${route}/`),
+    )
+  ) {
+    return true;
+  }
+
   return protectedRoutes.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
@@ -28,6 +38,7 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/notes/:path*",
+    "/interviews/:path*",
     "/write/:path*",
     "/practice/:path*",
     "/search/:path*",

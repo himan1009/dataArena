@@ -26,8 +26,8 @@ export default async function HomePage() {
       <Navbar user={user} />
       <main>
         <Hero user={user} />
-        <Features />
-        <Principles />
+        <Features user={user} />
+        <Principles user={user} />
         <Roadmap />
         <CTA user={user} />
         <LegalNotice />

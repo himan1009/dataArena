@@ -47,6 +47,8 @@ model User {
   editAssignments  Article[]   @relation("EditAssignments")
   articlesLastEdited Article[] @relation("ArticleLastEditor")
   writingStandardsUpdated WritingStandard[]
+  interviewExperiences InterviewExperience[]
+  interviewExperienceReports InterviewExperienceReport[]
 
   @@map("users")
 }
@@ -160,6 +162,56 @@ enum WritingStandardKey {
   ESSENTIAL
 }
 
+enum InterviewExperienceStatus {
+  DRAFT
+  SUBMITTED
+  CHANGES_REQUESTED
+  PUBLISHED
+  REJECTED
+}
+
+enum InterviewResult {
+  SELECTED
+  REJECTED
+  OFFER_DECLINED
+  PENDING
+  WITHDRAWN
+}
+
+enum ExperienceLevel {
+  FRESHER
+  JUNIOR
+  MID
+  SENIOR
+  LEAD
+}
+
+enum RoleLevel {
+  ENTRY
+  JUNIOR
+  MID
+  SENIOR
+  LEAD
+  STAFF
+}
+
+enum InterviewRoundType {
+  ONLINE_TEST
+  PHONE_SCREEN
+  TECHNICAL
+  SYSTEM_DESIGN
+  HR
+  MANAGERIAL
+  OTHER
+}
+
+enum InterviewReportReason {
+  INCORRECT_INFO
+  SPAM
+  OFFENSIVE
+  DUPLICATE
+}
+
 model WritingStandard {
   id          String             @id @default(cuid())
   key         WritingStandardKey @unique
@@ -204,4 +256,82 @@ model BugReport {
   @@index([status])
   @@index([createdAt])
   @@map("bug_reports")
+}
+
+model InterviewExperience {
+  id                     String                    @id @default(cuid())
+  authorId               String
+  slug                   String                    @unique
+  title                  String
+  company                String
+  role                   String
+  experienceLevel        ExperienceLevel
+  yearsOfExperience      String                    @default("1+")
+  roleLevel              RoleLevel                 @default(MID)
+  interviewYear          Int
+  location               String?
+  result                 InterviewResult
+  overview               String                    @db.Text
+  preparationTips        String                    @db.Text
+  finalAdvice            String                    @db.Text
+  status                 InterviewExperienceStatus @default(DRAFT)
+  reviewComment          String?
+  submittedAt            DateTime?
+  reviewedAt             DateTime?
+  publishedAt            DateTime?
+  authorNameSnapshot     String?
+  authorLinkedinSnapshot String?
+  createdAt              DateTime                  @default(now())
+  updatedAt              DateTime                  @updatedAt
+
+  author  User                      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  rounds  InterviewRound[]
+  reports InterviewExperienceReport[]
+
+  @@index([authorId])
+  @@index([status])
+  @@index([company])
+  @@index([role])
+  @@index([experienceLevel])
+  @@index([publishedAt])
+  @@map("interview_experiences")
+}
+
+model InterviewRound {
+  id                  String             @id @default(cuid())
+  experienceId        String
+  sortOrder           Int                @default(0)
+  name                String
+  roundType           InterviewRoundType
+  duration            String?
+  difficulty          String?
+  questionsAsked      String             @db.Text
+  candidateExperience String             @db.Text
+  outcome             String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  experience InterviewExperience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@index([experienceId])
+  @@map("interview_rounds")
+}
+
+model InterviewExperienceReport {
+  id           String                @id @default(cuid())
+  experienceId String
+  reporterId   String?
+  reason       InterviewReportReason
+  details      String?               @db.Text
+  status       FeedbackStatus        @default(NEW)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  experience InterviewExperience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  reporter   User?               @relation(fields: [reporterId], references: [id], onDelete: SetNull)
+
+  @@index([experienceId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("interview_experience_reports")
 }

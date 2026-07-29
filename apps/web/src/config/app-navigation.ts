@@ -2,6 +2,7 @@ import {
   Bookmark,
   BookOpen,
   Bot,
+  Briefcase,
   ClipboardCheck,
   Code2,
   Inbox,
@@ -37,6 +38,12 @@ export const mainNavItems: NavItem[] = [
     href: "/notes",
     icon: BookOpen,
     description: "Learning hubs and articles",
+  },
+  {
+    title: "Interviews",
+    href: "/interviews",
+    icon: Briefcase,
+    description: "Community interview experiences",
   },
   {
     title: "Write",
@@ -93,7 +100,7 @@ export const secondaryNavItems: NavItem[] = [
     title: "Reviews",
     href: "/admin/reviews",
     icon: ClipboardCheck,
-    description: "Author submission queue",
+    description: "Interview experiences, article submissions, and edit requests",
     adminOnly: true,
   },
   {
