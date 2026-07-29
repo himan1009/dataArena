@@ -17,6 +17,7 @@ import {
   ReportInterviewExperienceDto,
   ReviewInterviewExperienceDto,
   UpdateInterviewExperienceDto,
+  UpdateInterviewReportStatusDto,
 } from './dto/interviews.dto';
 
 const authorSelect = {
@@ -612,6 +613,68 @@ export class InterviewsService {
       },
     });
 
-    return { reports };
+    return {
+      reports: reports.map((report) => ({
+        id: report.id,
+        reason: report.reason,
+        details: report.details,
+        status: report.status,
+        createdAt: report.createdAt,
+        updatedAt: report.updatedAt,
+        experience: report.experience,
+        reporter: report.reporter
+          ? {
+              id: report.reporter.id,
+              name: report.reporter.name,
+              email: report.reporter.email,
+              linkedinUrl: report.reporter.linkedinUrl,
+            }
+          : null,
+      })),
+    };
+  }
+
+  async adminUpdateReportStatus(
+    id: string,
+    dto: UpdateInterviewReportStatusDto,
+  ) {
+    const report = await this.prisma.interviewExperienceReport.findUnique({
+      where: { id },
+    });
+
+    if (!report) {
+      throw new NotFoundException('Interview report not found');
+    }
+
+    const updated = await this.prisma.interviewExperienceReport.update({
+      where: { id },
+      data: { status: dto.status },
+      include: {
+        experience: {
+          select: { id: true, slug: true, title: true, company: true, role: true },
+        },
+        reporter: { select: authorSelect },
+      },
+    });
+
+    return {
+      report: {
+        id: updated.id,
+        reason: updated.reason,
+        details: updated.details,
+        status: updated.status,
+        createdAt: updated.createdAt,
+        updatedAt: updated.updatedAt,
+        experience: updated.experience,
+        reporter: updated.reporter
+          ? {
+              id: updated.reporter.id,
+              name: updated.reporter.name,
+              email: updated.reporter.email,
+              linkedinUrl: updated.reporter.linkedinUrl,
+            }
+          : null,
+      },
+    };
   }
 }

@@ -22,6 +22,7 @@ import {
   ReportInterviewExperienceDto,
   ReviewInterviewExperienceDto,
   UpdateInterviewExperienceDto,
+  UpdateInterviewReportStatusDto,
 } from './dto/interviews.dto';
 import { InterviewsService } from './interviews.service';
 
@@ -141,5 +142,15 @@ export class InterviewsController {
   @Roles('ADMIN')
   adminListReports() {
     return this.interviewsService.adminListReports();
+  }
+
+  @Patch('admin/reports/:id/status')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  adminUpdateReportStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateInterviewReportStatusDto,
+  ) {
+    return this.interviewsService.adminUpdateReportStatus(id, dto);
   }
 }

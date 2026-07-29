@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 
 import { getBackendUrl } from "@/lib/proxy";
-import type { InterviewExperience } from "@/lib/interview-experiences-api";
+import type { InterviewExperience, InterviewExperienceReport } from "@/lib/interview-experiences-api";
 
 class InterviewsApiError extends Error {
   constructor(
@@ -82,6 +82,10 @@ export async function getAdminInterviewReviewQueue() {
   return fetchInterviewsApi<{ experiences: InterviewExperience[] }>(
     "/admin/review-queue",
   );
+}
+
+export async function getAdminInterviewReports() {
+  return fetchInterviewsApi<{ reports: InterviewExperienceReport[] }>("/admin/reports");
 }
 
 export async function getAdminInterviewStats() {

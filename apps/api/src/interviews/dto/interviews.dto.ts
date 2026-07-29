@@ -14,6 +14,7 @@ import {
 import { Type } from 'class-transformer';
 import {
   ExperienceLevel,
+  FeedbackStatus,
   InterviewExperienceStatus,
   InterviewReportReason,
   InterviewResult,
@@ -200,6 +201,11 @@ export class ReportInterviewExperienceDto {
   @IsString()
   @MaxLength(2000)
   details?: string;
+}
+
+export class UpdateInterviewReportStatusDto {
+  @IsEnum(FeedbackStatus)
+  status!: FeedbackStatus;
 }
 
 export class ListInterviewExperiencesQuery {

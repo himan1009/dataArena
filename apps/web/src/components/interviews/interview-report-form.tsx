@@ -9,15 +9,14 @@ import { SelectField } from "@/components/ui/select-field";
 import {
   InterviewApiError,
   interviewExperiencesApi,
+  reportReasonLabels,
   type InterviewReportReason,
 } from "@/lib/interview-experiences-api";
 
-const reasonOptions = [
-  { value: "INCORRECT_INFO", label: "Incorrect information" },
-  { value: "SPAM", label: "Spam" },
-  { value: "OFFENSIVE", label: "Offensive content" },
-  { value: "DUPLICATE", label: "Duplicate" },
-];
+const reasonOptions = Object.entries(reportReasonLabels).map(([value, label]) => ({
+  value,
+  label,
+}));
 
 export function InterviewReportForm({ slug }: { slug: string }) {
   const router = useRouter();

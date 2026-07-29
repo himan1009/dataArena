@@ -3,11 +3,13 @@ import { ClipboardCheck } from "lucide-react";
 import { AdminEditRequestsPanel } from "@/components/admin/admin-edit-requests-panel";
 import { AdminReviewPanel } from "@/components/admin/admin-review-panel";
 import { AdminInterviewReviewPanel } from "@/components/interviews/admin-interview-review-panel";
+import { AdminInterviewReportsPanel } from "@/components/interviews/admin-interview-reports-panel";
 import { AppPage } from "@/components/ui/app-page";
 import { PageIntro } from "@/components/ui/page-intro";
 import { requireAdmin } from "@/lib/auth-server";
 import { fetchAdminData } from "@/lib/fetch-server";
 import {
+  getAdminInterviewReports,
   getAdminInterviewReviewQueue,
   getAdminInterviewStats,
 } from "@/lib/interviews-server";
@@ -20,12 +22,13 @@ export const metadata = {
 export default async function AdminReviewsPage() {
   await requireAdmin();
 
-  const [reviewData, editRequestData, interviewStats, interviewQueue] =
+  const [reviewData, editRequestData, interviewStats, interviewQueue, interviewReports] =
     await Promise.all([
       fetchAdminData<{ articles: ReviewArticle[] }>("/notes/admin/review-queue"),
       fetchAdminData<{ articles: EditRequestArticle[] }>("/notes/admin/edit-requests"),
       getAdminInterviewStats(),
       getAdminInterviewReviewQueue(),
+      getAdminInterviewReports(),
     ]);
 
   const pendingInterviewCount = interviewQueue.experiences.length;
@@ -43,12 +46,13 @@ export default async function AdminReviewsPage() {
         description="One place for all pending reviews — interview experiences, article submissions, and edit access requests."
       />
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {[
           ["Total pending", totalPending],
           ["Interview experiences", pendingInterviewCount],
           ["Article submissions", pendingArticleCount],
           ["Edit access requests", pendingEditRequestCount],
+          ["Open reports", interviewStats.reports],
         ].map(([label, value]) => (
           <div key={label} className="glass-panel p-5">
             <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
@@ -71,6 +75,19 @@ export default async function AdminReviewsPage() {
           </p>
         </div>
         <AdminInterviewReviewPanel experiences={interviewQueue.experiences} />
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight">
+            Interview reports
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            User reports on published interview experiences. Review the content,
+            then mark as read or archive.
+          </p>
+        </div>
+        <AdminInterviewReportsPanel reports={interviewReports.reports} />
       </section>
 
       <section className="space-y-4">

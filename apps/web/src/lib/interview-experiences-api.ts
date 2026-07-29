@@ -46,6 +46,30 @@ export type InterviewReportReason =
   | "OFFENSIVE"
   | "DUPLICATE";
 
+export type FeedbackStatus = "NEW" | "READ" | "ARCHIVED";
+
+export type InterviewExperienceReport = {
+  id: string;
+  reason: InterviewReportReason;
+  details: string | null;
+  status: FeedbackStatus;
+  createdAt: string;
+  updatedAt: string;
+  experience: {
+    id: string;
+    slug: string;
+    title: string;
+    company: string;
+    role: string;
+  };
+  reporter: {
+    id: string;
+    name: string | null;
+    email: string;
+    linkedinUrl: string | null;
+  } | null;
+};
+
 export type InterviewRound = {
   id?: string;
   sortOrder?: number;
@@ -237,6 +261,15 @@ export const interviewExperiencesApi = {
     request<{ success: boolean }>(`/admin/experiences/${id}`, {
       method: "DELETE",
     }),
+
+  adminListReports: () =>
+    request<{ reports: InterviewExperienceReport[] }>("/admin/reports"),
+
+  adminUpdateReportStatus: (id: string, status: FeedbackStatus) =>
+    request<{ report: InterviewExperienceReport }>(`/admin/reports/${id}/status`, {
+      method: "PATCH",
+      body: { status },
+    }),
 };
 
 export const experienceStatusLabels: Record<InterviewExperienceStatus, string> = {
@@ -293,6 +326,13 @@ export const difficultyLabels: Record<RoundDifficulty, string> = {
   MEDIUM: "Medium",
   HARD: "Hard",
   VERY_HARD: "Very hard",
+};
+
+export const reportReasonLabels: Record<InterviewReportReason, string> = {
+  INCORRECT_INFO: "Incorrect information",
+  SPAM: "Spam",
+  OFFENSIVE: "Offensive content",
+  DUPLICATE: "Duplicate",
 };
 
 export const roundTypeLabels: Record<InterviewRoundType, string> = {
