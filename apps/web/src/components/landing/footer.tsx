@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/brand/logo";
+import { JoinCommunityButton } from "@/components/community";
 import { PageContainer } from "@/components/ui/page-container";
 import { legalNavLinks } from "@/lib/legal-content";
 import type { AuthUser } from "@/lib/api";
@@ -19,7 +20,7 @@ export function Footer({ user }: { user: AuthUser | null }) {
   return (
     <footer className="border-t border-border py-12">
       <PageContainer size="wide">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1fr]">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
           <div className="sm:col-span-2 lg:col-span-1">
             <Logo />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
@@ -65,6 +66,22 @@ export function Footer({ user }: { user: AuthUser | null }) {
                   {link.label}
                 </Link>
               ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Community
+            </p>
+            <div className="mt-3 flex flex-col gap-3">
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Join our WhatsApp community for updates, prep tips, and peer support.
+              </p>
+              <JoinCommunityButton
+                size="sm"
+                variant="outline"
+                className="w-fit border-white/[0.1] bg-white/[0.02]"
+              />
             </div>
           </div>
 

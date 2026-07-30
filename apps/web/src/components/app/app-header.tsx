@@ -6,6 +6,7 @@ import { Menu } from "lucide-react";
 import { usePageMeta } from "@/components/app/use-page-meta";
 import { AppSidebar, SIDEBAR_WIDTH } from "@/components/app/app-sidebar";
 import { UserMenu } from "@/components/auth/user-menu";
+import { JoinCommunityButton } from "@/components/community";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import type { AuthUser } from "@/lib/api";
@@ -44,7 +45,14 @@ export function AppHeader({ user }: { user: AuthUser }) {
         )}
       </div>
 
-      <UserMenu user={user} />
+      <div className="flex items-center gap-2 sm:gap-3">
+        <JoinCommunityButton
+          size="sm"
+          variant="outline"
+          className="hidden border-white/[0.1] bg-white/[0.02] md:inline-flex"
+        />
+        <UserMenu user={user} />
+      </div>
     </header>
   );
 }

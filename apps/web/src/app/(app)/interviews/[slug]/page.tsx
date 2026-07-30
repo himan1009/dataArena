@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { InterviewExperienceCard } from "@/components/interviews/interview-experience-card";
 import { InterviewExperienceDetail } from "@/components/interviews/interview-experience-detail";
 import { InterviewReportForm } from "@/components/interviews/interview-report-form";
+import { JoinCommunityCard } from "@/components/community";
 import { AppPage } from "@/components/ui/app-page";
 import { buttonVariants } from "@/components/ui/button";
 import { getExperienceBySlug } from "@/lib/interviews-server";
@@ -66,6 +67,11 @@ export default async function InterviewExperiencePage({
           </div>
         </section>
       )}
+
+      <JoinCommunityCard
+        title="Talk interview prep with the community"
+        description="Join the Data Arena WhatsApp community to discuss interview experiences, share tips, and learn from other data engineers."
+      />
     </AppPage>
   );
 }

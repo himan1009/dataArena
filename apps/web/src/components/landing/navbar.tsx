@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { UserMenu } from "@/components/auth/user-menu";
 import { Logo } from "@/components/brand/logo";
+import { JoinCommunityButton } from "@/components/community";
 import { PageContainer } from "@/components/ui/page-container";
 import { buttonVariants } from "@/components/ui/button";
 import type { AuthUser } from "@/lib/api";
@@ -33,6 +34,11 @@ export function Navbar({ user }: { user: AuthUser | null }) {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            <JoinCommunityButton
+              size="sm"
+              variant="outline"
+              className="hidden border-white/[0.1] bg-white/[0.02] sm:inline-flex"
+            />
             {user ? (
               <>
                 <Link

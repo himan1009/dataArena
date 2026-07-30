@@ -8,6 +8,7 @@ import { NotesAdminAssignEditor } from "@/components/notes/notes-admin-assign-ed
 import { NotesAdminEditLink } from "@/components/notes/notes-admin-edit-link";
 import { NotesBreadcrumbs } from "@/components/notes/notes-breadcrumbs";
 import { AppPage } from "@/components/ui/app-page";
+import { JoinCommunityCard } from "@/components/community";
 import { getCurrentUser, isAdmin } from "@/lib/auth-server";
 import { getArticle, NotesApiError } from "@/lib/notes-server";
 
@@ -114,6 +115,11 @@ export default async function ArticlePage({ params }: PageProps) {
           topicSlug={topicSlug}
           articles={article.topic.articles}
           currentSlug={article.slug}
+        />
+
+        <JoinCommunityCard
+          title="Discuss this topic with the community"
+          description="Join the Data Arena WhatsApp community to ask questions about this article, share your learnings, and connect with other data engineers."
         />
       </article>
     </AppPage>

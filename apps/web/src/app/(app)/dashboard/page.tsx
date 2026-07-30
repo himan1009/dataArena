@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { AppPage } from "@/components/ui/app-page";
+import { JoinCommunityCard } from "@/components/community";
 import { Badge } from "@/components/ui/badge";
 import { IconBox } from "@/components/ui/icon-box";
 import { PageIntro } from "@/components/ui/page-intro";
@@ -140,6 +141,8 @@ export default async function DashboardPage() {
           ))}
         </div>
       </section>
+
+      <JoinCommunityCard />
 
       <section>
         <div className="mb-5">

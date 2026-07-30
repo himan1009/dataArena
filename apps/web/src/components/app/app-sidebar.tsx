@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 import { Logo } from "@/components/brand/logo";
+import { JoinCommunityNavLink } from "@/components/community";
 import { mainNavItems, secondaryNavItems, type NavItem } from "@/config/app-navigation";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -106,6 +107,13 @@ export function AppSidebar({
           {visibleMain.map((item) => (
             <NavLink key={item.href} item={item} onNavigate={onNavigate} />
           ))}
+        </nav>
+
+        <Separator className="my-7 bg-white/[0.06]" />
+
+        <nav className="space-y-1.5">
+          <p className="section-label mb-4 px-3">Community</p>
+          <JoinCommunityNavLink onNavigate={onNavigate} />
         </nav>
 
         <Separator className="my-7 bg-white/[0.06]" />

@@ -14,6 +14,7 @@ import {
 
 import { PageContainer } from "@/components/ui/page-container";
 import { buttonVariants } from "@/components/ui/button";
+import { JoinCommunityButton } from "@/components/community";
 import type { AuthUser } from "@/lib/api";
 import { getAuthGatedHref } from "@/lib/auth-links";
 import { cn } from "@/lib/utils";
@@ -97,6 +98,11 @@ export function Hero({ user }: { user: AuthUser | null }) {
                   </Link>
                 </>
               )}
+              <JoinCommunityButton
+                size="lg"
+                variant="outline"
+                className="min-w-[180px] border-white/[0.1] bg-transparent"
+              />
             </div>
 
             <div className="mt-12 grid max-w-md grid-cols-3 gap-5 border-t border-border pt-8 lg:mx-0 mx-auto">
