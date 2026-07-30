@@ -5,6 +5,7 @@ import { JoinCommunityButton } from "@/components/community";
 import { PageContainer } from "@/components/ui/page-container";
 import { legalNavLinks } from "@/lib/legal-content";
 import type { AuthUser } from "@/lib/api";
+import { getAuthGatedHref } from "@/lib/auth-links";
 
 const productLinks = [
   { href: "/#features", label: "Features" },
@@ -14,13 +15,19 @@ const productLinks = [
   { href: "/report-bug", label: "Report a bug" },
 ];
 
+const workspaceLinks = [
+  { href: "/notes", label: "Notes" },
+  { href: "/interviews", label: "Interviews" },
+  { href: "/practice", label: "Practice" },
+];
+
 export function Footer({ user }: { user: AuthUser | null }) {
   const year = new Date().getFullYear();
 
   return (
     <footer className="border-t border-border py-12">
       <PageContainer size="wide">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-6">
           <div className="sm:col-span-2 lg:col-span-1">
             <Logo />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
@@ -38,6 +45,23 @@ export function Footer({ user }: { user: AuthUser | null }) {
                 <Link
                   key={link.href}
                   href={link.href}
+                  className="text-sm text-foreground/80 hover:text-foreground"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Explore
+            </p>
+            <div className="mt-3 flex flex-col gap-2.5">
+              {workspaceLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={getAuthGatedHref(user, link.href)}
                   className="text-sm text-foreground/80 hover:text-foreground"
                 >
                   {link.label}

@@ -2,6 +2,11 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import type { AuthUser } from "@/lib/api";
+import {
+  canUploadPracticeQuestions,
+  isAdmin,
+  isEditorOrAdmin,
+} from "@/lib/auth-utils";
 import { applySetCookiesFromResponse } from "@/lib/cookie-utils";
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { getBackendUrl } from "@/lib/proxy";
@@ -81,10 +86,4 @@ export async function requireEditor(): Promise<AuthUser> {
   return user;
 }
 
-export function isEditorOrAdmin(user: AuthUser) {
-  return user.role === "EDITOR" || user.role === "ADMIN";
-}
-
-export function isAdmin(user: AuthUser) {
-  return user.role === "ADMIN";
-}
+export { canUploadPracticeQuestions, isAdmin, isEditorOrAdmin };

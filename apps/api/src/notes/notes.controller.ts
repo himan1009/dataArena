@@ -130,6 +130,13 @@ export class NotesController {
     );
   }
 
+  @Get('admin/stats')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  getAdminStats() {
+    return this.notesService.adminStats();
+  }
+
   @Get('admin/review-queue')
   @UseGuards(RolesGuard)
   @Roles('ADMIN')

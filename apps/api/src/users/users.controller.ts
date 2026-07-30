@@ -5,7 +5,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { UpdateUserRoleDto, UpdateUserStatusDto } from './dto/users.dto';
+import { UpdateUserRoleDto, UpdateUserStatusDto, UpdateQuestionUploadPermissionDto } from './dto/users.dto';
 import { UsersService } from './users.service';
 
 @Controller('admin/users')
@@ -29,6 +29,7 @@ export class UsersController {
         deactivatedAt: user.deactivatedAt,
         createdAt: user.createdAt,
         publishedArticleCount: user._count.articles,
+        canUploadQuestions: user.canUploadQuestions,
       })),
     };
   }
@@ -49,5 +50,14 @@ export class UsersController {
     @Body() dto: UpdateUserStatusDto,
   ) {
     return this.usersService.updateUserStatus(admin.id, userId, dto);
+  }
+
+  @Patch(':id/question-upload')
+  updateQuestionUpload(
+    @CurrentUser() admin: AuthenticatedUser,
+    @Param('id') userId: string,
+    @Body() dto: UpdateQuestionUploadPermissionDto,
+  ) {
+    return this.usersService.updateQuestionUploadPermission(admin.id, userId, dto);
   }
 }

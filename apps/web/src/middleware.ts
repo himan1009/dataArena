@@ -4,10 +4,19 @@ import type { NextRequest } from "next/server";
 import { protectedRoutes } from "@/config/app-navigation";
 
 const interviewProtectedPrefixes = ["/interviews/share", "/interviews/my"];
+const practiceProtectedPrefixes = ["/practice/contribute", "/practice/my"];
 
 function isProtectedRoute(pathname: string) {
   if (
     interviewProtectedPrefixes.some(
+      (route) => pathname === route || pathname.startsWith(`${route}/`),
+    )
+  ) {
+    return true;
+  }
+
+  if (
+    practiceProtectedPrefixes.some(
       (route) => pathname === route || pathname.startsWith(`${route}/`),
     )
   ) {

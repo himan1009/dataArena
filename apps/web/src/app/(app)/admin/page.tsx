@@ -1,14 +1,11 @@
 import Link from "next/link";
-import { Shield, ClipboardCheck, Users, BookOpen, Inbox, BookOpenCheck, UserPen } from "lucide-react";
+import { Shield, ClipboardCheck, Users, BookOpen, Inbox, BookOpenCheck, UserPen, Code2 } from "lucide-react";
 
-import { AdminNotesPanel } from "@/components/admin/admin-notes-panel";
-import { AdminLoadError } from "@/components/admin/admin-load-error";
 import { AppPage } from "@/components/ui/app-page";
 import { IconBox } from "@/components/ui/icon-box";
 import { PageIntro } from "@/components/ui/page-intro";
 import { buttonVariants } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/auth-server";
-import { getAdminCategories, NotesApiError } from "@/lib/notes-server";
 import { cn } from "@/lib/utils";
 
 export const metadata = {
@@ -16,6 +13,18 @@ export const metadata = {
 };
 
 const adminLinks = [
+  {
+    title: "Articles CMS",
+    description: "Create categories, topics, and markdown articles for the Notes learning hub.",
+    href: "/admin/articles",
+    icon: BookOpen,
+  },
+  {
+    title: "Practice CMS",
+    description: "Create practice categories and topics for the question library.",
+    href: "/admin/practice",
+    icon: Code2,
+  },
   {
     title: "Assign writers",
     description: "Assign each topic to one editor. Only assigned writers can start that article.",
@@ -36,7 +45,7 @@ const adminLinks = [
   },
   {
     title: "Inbox",
-    description: "Read contact messages and bug reports. Reply via email with the original message included.",
+    description: "Contact messages, bug reports, and interview experience reports.",
     href: "/admin/inbox",
     icon: Inbox,
   },
@@ -48,7 +57,7 @@ const adminLinks = [
   },
   {
     title: "Users",
-    description: "Assign editor roles, demote users, and manage account access.",
+    description: "Editor roles, practice question upload permission, and account access",
     href: "/admin/users",
     icon: Users,
   },
@@ -57,32 +66,14 @@ const adminLinks = [
 export default async function AdminPage() {
   await requireAdmin();
 
-  let categories: Awaited<ReturnType<typeof getAdminCategories>> = [];
-  let loadError: string | null = null;
-
-  try {
-    categories = await getAdminCategories();
-  } catch (error) {
-    loadError =
-      error instanceof NotesApiError
-        ? error.message
-        : "Failed to load categories from the API.";
-  }
-
   return (
     <AppPage>
       <PageIntro
         icon={Shield}
         label="Admin CMS"
         title="Content management"
-        description="Create categories, topics, and markdown articles for the Knowledge Engine."
+        description="Manage articles, practice questions, reviews, writers, and platform settings from one hub."
       />
-
-      {loadError ? (
-        <AdminLoadError error={loadError} />
-      ) : (
-        <AdminNotesPanel categories={categories} />
-      )}
 
       <section className="grid gap-5 sm:grid-cols-2">
         {adminLinks.map((link) => (

@@ -63,6 +63,7 @@ export type AuthUser = {
   name: string | null;
   role: string;
   linkedinUrl?: string | null;
+  canUploadQuestions?: boolean;
   createdAt?: string;
 };
 

@@ -6,7 +6,7 @@ import {
 import { Role } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
-import { UpdateUserRoleDto, UpdateUserStatusDto } from './dto/users.dto';
+import { UpdateUserRoleDto, UpdateUserStatusDto, UpdateQuestionUploadPermissionDto } from './dto/users.dto';
 
 @Injectable()
 export class UsersService {
@@ -21,6 +21,7 @@ export class UsersService {
         name: true,
         role: true,
         linkedinUrl: true,
+        canUploadQuestions: true,
         isActive: true,
         deactivatedAt: true,
         createdAt: true,
@@ -124,6 +125,46 @@ export class UsersService {
     return {
       user: updated,
       message: dto.isActive ? 'User reactivated' : 'User deactivated',
+    };
+  }
+
+  async updateQuestionUploadPermission(
+    adminId: string,
+    userId: string,
+    dto: UpdateQuestionUploadPermissionDto,
+  ) {
+    if (adminId === userId) {
+      throw new ForbiddenException('You cannot change your own question upload permission');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.role === Role.ADMIN) {
+      throw new ForbiddenException('Admins always have full practice access');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { canUploadQuestions: dto.canUploadQuestions },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        canUploadQuestions: true,
+        isActive: true,
+      },
+    });
+
+    return {
+      user: updated,
+      message: dto.canUploadQuestions
+        ? 'Question upload permission granted'
+        : 'Question upload permission removed',
     };
   }
 }

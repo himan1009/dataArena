@@ -12,7 +12,7 @@ const phases = [
     phase: "Now",
     title: "Core platform",
     summary: "Auth, content, and author workflow",
-    items: ["User roles & auth", "Notes & topics CMS", "Author write & review", "Admin panel"],
+    items: ["User roles & auth", "Notes & topics CMS", "Practice question bank", "Author write & review", "Admin panel"],
     active: true,
   },
   {

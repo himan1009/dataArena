@@ -27,7 +27,7 @@ const principles = [
     color: "text-gold",
     href: "/notes",
   },
-  { icon: Code2, label: "Practice", detail: "Hands-on labs and exercises", color: "text-teal" },
+  { icon: Code2, label: "Practice", detail: "Curated questions by category and topic", color: "text-teal", href: "/practice" },
   { icon: Wrench, label: "Build", detail: "Production patterns and pipelines", color: "text-primary" },
   { icon: RefreshCw, label: "Revise", detail: "Review and retain what matters", color: "text-violet" },
   {

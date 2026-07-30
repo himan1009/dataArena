@@ -3,16 +3,19 @@ import { ClipboardCheck } from "lucide-react";
 import { AdminEditRequestsPanel } from "@/components/admin/admin-edit-requests-panel";
 import { AdminReviewPanel } from "@/components/admin/admin-review-panel";
 import { AdminInterviewReviewPanel } from "@/components/interviews/admin-interview-review-panel";
-import { AdminInterviewReportsPanel } from "@/components/interviews/admin-interview-reports-panel";
+import { AdminPracticeReviewPanel } from "@/components/practice/admin-practice-review-panel";
 import { AppPage } from "@/components/ui/app-page";
 import { PageIntro } from "@/components/ui/page-intro";
 import { requireAdmin } from "@/lib/auth-server";
 import { fetchAdminData } from "@/lib/fetch-server";
 import {
-  getAdminInterviewReports,
   getAdminInterviewReviewQueue,
   getAdminInterviewStats,
 } from "@/lib/interviews-server";
+import {
+  getAdminPracticeReviewQueue,
+  getAdminPracticeStats,
+} from "@/lib/practice-server";
 import type { EditRequestArticle, ReviewArticle } from "@/lib/notes-api";
 
 export const metadata = {
@@ -22,20 +25,22 @@ export const metadata = {
 export default async function AdminReviewsPage() {
   await requireAdmin();
 
-  const [reviewData, editRequestData, interviewStats, interviewQueue, interviewReports] =
+  const [reviewData, editRequestData, interviewStats, interviewQueue, practiceStats, practiceQueue] =
     await Promise.all([
       fetchAdminData<{ articles: ReviewArticle[] }>("/notes/admin/review-queue"),
       fetchAdminData<{ articles: EditRequestArticle[] }>("/notes/admin/edit-requests"),
       getAdminInterviewStats(),
       getAdminInterviewReviewQueue(),
-      getAdminInterviewReports(),
+      getAdminPracticeStats(),
+      getAdminPracticeReviewQueue(),
     ]);
 
   const pendingInterviewCount = interviewQueue.experiences.length;
+  const pendingPracticeCount = practiceQueue.questions.length;
   const pendingArticleCount = reviewData?.articles?.length ?? 0;
   const pendingEditRequestCount = editRequestData?.articles?.length ?? 0;
   const totalPending =
-    pendingInterviewCount + pendingArticleCount + pendingEditRequestCount;
+    pendingInterviewCount + pendingPracticeCount + pendingArticleCount + pendingEditRequestCount;
 
   return (
     <AppPage>
@@ -43,16 +48,16 @@ export default async function AdminReviewsPage() {
         icon={ClipboardCheck}
         label="Admin"
         title="Reviews"
-        description="One place for all pending reviews — interview experiences, article submissions, and edit access requests."
+        description="One place for all pending reviews — interview experiences, practice questions, article submissions, and edit access requests."
       />
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {[
           ["Total pending", totalPending],
           ["Interview experiences", pendingInterviewCount],
+          ["Practice questions", pendingPracticeCount],
           ["Article submissions", pendingArticleCount],
           ["Edit access requests", pendingEditRequestCount],
-          ["Open reports", interviewStats.reports],
         ].map(([label, value]) => (
           <div key={label} className="glass-panel p-5">
             <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
@@ -79,15 +84,13 @@ export default async function AdminReviewsPage() {
 
       <section className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold tracking-tight">
-            Interview reports
-          </h2>
+          <h2 className="text-lg font-semibold tracking-tight">Practice questions</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            User reports on published interview experiences. Review the content,
-            then mark as read or archive.
+            Editor-submitted practice questions waiting for approval. Published:{" "}
+            {practiceStats.published} · Pending: {practiceStats.pendingReview}
           </p>
         </div>
-        <AdminInterviewReportsPanel reports={interviewReports.reports} />
+        <AdminPracticeReviewPanel questions={practiceQueue.questions} />
       </section>
 
       <section className="space-y-4">

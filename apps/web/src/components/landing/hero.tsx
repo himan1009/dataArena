@@ -150,7 +150,13 @@ export function Hero({ user }: { user: AuthUser | null }) {
                       tint: "teal" as const,
                       href: "/interviews",
                     },
-                    { icon: Code2, label: "Practice", value: "SQL · Python · Spark", tint: "primary" as const },
+                    {
+                      icon: Code2,
+                      label: "Practice",
+                      value: "Categories & topics",
+                      tint: "primary" as const,
+                      href: "/practice",
+                    },
                     { icon: Bot, label: "AI Copilot", value: "Explain & debug", tint: "violet" as const },
                   ].map((item) => {
                     const href =

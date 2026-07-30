@@ -33,11 +33,12 @@ const features = [
   },
   {
     icon: Terminal,
-    title: "Practice Labs",
+    title: "Practice",
     description:
-      "Run SQL, Python, and PySpark exercises against real-world scenarios.",
+      "Browse curated questions by category and topic — SQL, DSA, and more.",
     span: "",
-    status: "Next",
+    status: "Live",
+    href: "/practice",
   },
   {
     icon: Bot,

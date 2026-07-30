@@ -33,6 +33,7 @@ model User {
   name          String?
   role          Role      @default(USER)
   linkedinUrl   String?
+  canUploadQuestions Boolean @default(false)
   isActive      Boolean   @default(true)
   deactivatedAt DateTime?
   emailVerified Boolean   @default(false)
@@ -49,6 +50,8 @@ model User {
   writingStandardsUpdated WritingStandard[]
   interviewExperiences InterviewExperience[]
   interviewExperienceReports InterviewExperienceReport[]
+  practiceQuestionsAuthored PracticeQuestion[] @relation("PracticeQuestionAuthor")
+  practiceQuestionsApproved PracticeQuestion[] @relation("PracticeQuestionApprover")
 
   @@map("users")
 }
@@ -334,4 +337,126 @@ model InterviewExperienceReport {
   @@index([status])
   @@index([createdAt])
   @@map("interview_experience_reports")
+}
+
+enum PracticeContentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum PracticeQuestionStatus {
+  DRAFT
+  SUBMITTED
+  PUBLISHED
+  REJECTED
+}
+
+enum PracticeDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum PracticePlatform {
+  LEETCODE
+}
+
+model PracticeCategory {
+  id          String                @id @default(cuid())
+  name        String
+  slug        String                @unique
+  description String?
+  icon        String?
+  sortOrder   Int                   @default(0)
+  status      PracticeContentStatus @default(ACTIVE)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  topics    PracticeTopic[]
+  questions PracticeQuestion[]
+
+  @@index([status])
+  @@index([sortOrder])
+  @@map("practice_categories")
+}
+
+model PracticeTopic {
+  id          String                @id @default(cuid())
+  categoryId  String
+  name        String
+  slug        String
+  description String?
+  sortOrder   Int                   @default(0)
+  status      PracticeContentStatus @default(ACTIVE)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  category  PracticeCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  subtopics PracticeSubtopic[]
+  questions PracticeQuestion[]
+
+  @@unique([categoryId, slug])
+  @@index([categoryId])
+  @@index([status])
+  @@map("practice_topics")
+}
+
+model PracticeSubtopic {
+  id        String                @id @default(cuid())
+  topicId   String
+  name      String
+  slug      String
+  sortOrder Int                   @default(0)
+  status    PracticeContentStatus @default(ACTIVE)
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  topic     PracticeTopic      @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  questions PracticeQuestion[]
+
+  @@unique([topicId, slug])
+  @@index([topicId])
+  @@map("practice_subtopics")
+}
+
+model PracticeQuestion {
+  id                     String                 @id @default(cuid())
+  title                  String
+  platform               PracticePlatform       @default(LEETCODE)
+  questionUrl            String
+  difficulty             PracticeDifficulty
+  categoryId             String
+  topicId                String
+  subtopicId             String?
+  companyTags            String[]               @default([])
+  estimatedTime          String?
+  description            String?                @db.Text
+  status                 PracticeQuestionStatus @default(DRAFT)
+  reviewComment          String?
+  authorId               String
+  authorNameSnapshot     String?
+  approvedById           String?
+  approvedByNameSnapshot String?
+  submittedAt            DateTime?
+  reviewedAt             DateTime?
+  publishedAt            DateTime?
+  sortOrder              Int                    @default(0)
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+
+  category   PracticeCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  topic      PracticeTopic     @relation(fields: [topicId], references: [id], onDelete: Restrict)
+  subtopic   PracticeSubtopic? @relation(fields: [subtopicId], references: [id], onDelete: SetNull)
+  author     User              @relation("PracticeQuestionAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  approvedBy User?             @relation("PracticeQuestionApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([categoryId])
+  @@index([topicId])
+  @@index([subtopicId])
+  @@index([authorId])
+  @@index([status])
+  @@index([difficulty])
+  @@index([publishedAt])
+  @@index([topicId, sortOrder])
+  @@map("practice_questions")
 }

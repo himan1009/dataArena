@@ -22,7 +22,7 @@ export default async function AdminUsersPage() {
         icon={Users}
         label="Admin"
         title="Users"
-        description="Assign editor access, demote contributors back to normal users, or deactivate accounts while keeping their published credits."
+        description="Assign editor access, grant practice question upload permission, or deactivate accounts while keeping published credits."
       />
 
       <AdminUsersPanel users={data?.users ?? []} currentUserId={user.id} />

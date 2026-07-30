@@ -11,3 +11,8 @@ export class UpdateUserStatusDto {
   @IsBoolean()
   isActive!: boolean;
 }
+
+export class UpdateQuestionUploadPermissionDto {
+  @IsBoolean()
+  canUploadQuestions!: boolean;
+}

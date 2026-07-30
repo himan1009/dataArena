@@ -1082,6 +1082,25 @@ export class NotesService {
     throw new BadRequestException('Invalid review action');
   }
 
+  async adminStats() {
+    const [categories, topics, pendingReview, published, editRequests] =
+      await Promise.all([
+        this.prisma.category.count(),
+        this.prisma.topic.count(),
+        this.prisma.article.count({
+          where: { status: ArticleStatus.SUBMITTED },
+        }),
+        this.prisma.article.count({
+          where: { status: ArticleStatus.PUBLISHED },
+        }),
+        this.prisma.article.count({
+          where: { editRequestedAt: { not: null } },
+        }),
+      ]);
+
+    return { categories, topics, pendingReview, published, editRequests };
+  }
+
   async adminListCategories() {
     const categories = await this.prisma.category.findMany({
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],

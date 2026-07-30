@@ -162,6 +162,16 @@ export async function getArticle(
   return data.article;
 }
 
+export async function getAdminNotesStats() {
+  return fetchNotesApi<{
+    categories: number;
+    topics: number;
+    pendingReview: number;
+    published: number;
+    editRequests: number;
+  }>("/admin/stats");
+}
+
 export async function getAdminCategories() {
   const data = await fetchNotesApi<{
     categories: Array<{

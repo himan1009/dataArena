@@ -49,6 +49,7 @@ export class AuthService {
         name: true,
         role: true,
         linkedinUrl: true,
+        canUploadQuestions: true,
         createdAt: true,
       },
     });
@@ -88,6 +89,7 @@ export class AuthService {
       name: user.name,
       role: user.role,
       linkedinUrl: user.linkedinUrl,
+      canUploadQuestions: user.canUploadQuestions,
       createdAt: user.createdAt,
     };
 
@@ -142,6 +144,8 @@ export class AuthService {
             email: true,
             name: true,
             role: true,
+            linkedinUrl: true,
+            canUploadQuestions: true,
             createdAt: true,
           },
         },
@@ -175,6 +179,7 @@ export class AuthService {
         name: true,
         role: true,
         linkedinUrl: true,
+        canUploadQuestions: true,
         createdAt: true,
       },
     });
@@ -194,6 +199,7 @@ export class AuthService {
         name: true,
         role: true,
         linkedinUrl: true,
+        canUploadQuestions: true,
         createdAt: true,
       },
     });

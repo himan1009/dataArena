@@ -7,6 +7,7 @@ export type AdminUser = {
   name: string | null;
   role: "USER" | "EDITOR" | "ADMIN";
   linkedinUrl: string | null;
+  canUploadQuestions: boolean;
   isActive: boolean;
   deactivatedAt: string | null;
   createdAt: string;
@@ -54,5 +55,11 @@ export const adminUsersApi = {
     adminUsersRequest(`/${userId}/status`, {
       method: "PATCH",
       body: { isActive },
+    }),
+
+  updateQuestionUpload: (userId: string, canUploadQuestions: boolean) =>
+    adminUsersRequest(`/${userId}/question-upload`, {
+      method: "PATCH",
+      body: { canUploadQuestions },
     }),
 };

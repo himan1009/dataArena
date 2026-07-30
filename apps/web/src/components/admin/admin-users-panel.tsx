@@ -49,8 +49,13 @@ export function AdminUsersPanel({
       <div className="glass-panel p-5 text-sm text-muted-foreground sm:p-6">
         <p>
           Promote users to <strong className="text-foreground">Editor</strong> when they
-          contribute content. Demote them back to <strong className="text-foreground">User</strong> when
-          their work is done.
+          contribute articles. Use <strong className="text-foreground">Practice upload</strong> to
+          let a user add practice questions (categories and topics stay admin-only in Practice CMS).
+        </p>
+        <p className="mt-2">
+          After you click <strong className="text-foreground">Allow upload</strong>, that user will
+          see <strong className="text-foreground">Add question</strong> on the Practice page and in
+          the sidebar. Questions still go through admin review before publishing.
         </p>
         <p className="mt-2">
           Deactivating a user blocks login, but their name and LinkedIn stay on every
@@ -71,6 +76,7 @@ export function AdminUsersPanel({
               <tr className="border-b border-white/[0.06] text-xs uppercase tracking-[0.14em] text-muted-foreground">
                 <th className="px-5 py-4 font-semibold">User</th>
                 <th className="px-5 py-4 font-semibold">Role</th>
+                <th className="px-5 py-4 font-semibold">Practice upload</th>
                 <th className="px-5 py-4 font-semibold">Status</th>
                 <th className="px-5 py-4 font-semibold">Published</th>
                 <th className="px-5 py-4 font-semibold">Actions</th>
@@ -81,6 +87,7 @@ export function AdminUsersPanel({
                 const isSelf = user.id === currentUserId;
                 const isAdmin = user.role === "ADMIN";
                 const roleKey = `role-${user.id}`;
+                const uploadKey = `upload-${user.id}`;
                 const statusKey = `status-${user.id}`;
 
                 return (
@@ -128,6 +135,41 @@ export function AdminUsersPanel({
                             )
                           }
                         />
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
+                      {isAdmin ? (
+                        <span className="text-xs text-muted-foreground">Always on</span>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {user.canUploadQuestions && (
+                            <Badge className="w-fit bg-violet-500/15 text-violet-300">
+                              Can add questions
+                            </Badge>
+                          )}
+                          <Button
+                            size="sm"
+                            variant={user.canUploadQuestions ? "outline" : "secondary"}
+                            className="border-white/10 bg-white/[0.03]"
+                            disabled={isSelf || loadingKey === uploadKey}
+                            onClick={() =>
+                              runAction(uploadKey, () =>
+                                adminUsersApi.updateQuestionUpload(
+                                  user.id,
+                                  !user.canUploadQuestions,
+                                ),
+                              )
+                            }
+                          >
+                            {loadingKey === uploadKey ? (
+                              <Loader2 className="size-4 animate-spin" />
+                            ) : user.canUploadQuestions ? (
+                              "Revoke upload"
+                            ) : (
+                              "Allow upload"
+                            )}
+                          </Button>
+                        </div>
                       )}
                     </td>
                     <td className="px-5 py-4">

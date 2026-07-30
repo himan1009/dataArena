@@ -15,9 +15,10 @@ import {
 import { AppPage } from "@/components/ui/app-page";
 import { JoinCommunityCard } from "@/components/community";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { IconBox } from "@/components/ui/icon-box";
 import { PageIntro } from "@/components/ui/page-intro";
-import { requireUser, isEditorOrAdmin } from "@/lib/auth-server";
+import { requireUser, isEditorOrAdmin, canUploadPracticeQuestions } from "@/lib/auth-server";
 import { cn } from "@/lib/utils";
 
 export const metadata = {
@@ -55,12 +56,12 @@ const exploreSections = [
   },
   {
     title: "Practice",
-    description: "SQL, Python, and PySpark labs.",
+    description: "Browse curated questions or contribute if you have upload access.",
     href: "/practice",
     icon: Code2,
     tint: "violet" as const,
-    ready: false,
-    featured: false,
+    ready: true,
+    featured: true,
   },
   {
     title: "Search",
@@ -94,6 +95,7 @@ export default async function DashboardPage() {
   const firstName = user.name?.split(" ")[0];
   const greeting = firstName ? `Welcome back, ${firstName}` : "Welcome back";
   const canWrite = isEditorOrAdmin(user);
+  const canContributePractice = canUploadPracticeQuestions(user);
 
   const visibleSections = exploreSections.filter(
     (section) => !section.editorOnly || canWrite,
@@ -113,6 +115,24 @@ export default async function DashboardPage() {
             : "Jump into notes and interview experiences."
         }
       />
+
+      {canContributePractice && (
+        <section className="glass-panel flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-violet-300">
+              Practice contributor
+            </p>
+            <h3 className="mt-2 text-lg font-semibold">Add a practice question</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Submit questions for admin review. Approved questions appear on the Practice page.
+            </p>
+          </div>
+          <Link href="/practice/contribute" className={cn(buttonVariants(), "w-fit shrink-0")}>
+            <Code2 className="size-4" />
+            Add question
+          </Link>
+        </section>
+      )}
 
       <section>
         <div className="mb-5">
@@ -190,12 +210,12 @@ export default async function DashboardPage() {
         <p className="section-label mb-2">Roadmap</p>
         <h3 className="text-lg font-semibold">What&apos;s live now</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Notes, interviews, author workflow, and admin tools are available today.
+          Notes, interviews, practice questions, author workflow, and admin tools are available today.
         </p>
         <div className="mt-6 space-y-3">
           {[
-            { phase: "Now", text: "Notes, interviews, author workflow, admin tools" },
-            { phase: "Next", text: "Search, bookmarks, SQL practice" },
+            { phase: "Now", text: "Notes, interviews, practice, author workflow, admin tools" },
+            { phase: "Next", text: "Search, bookmarks, SQL practice sandbox" },
             { phase: "Later", text: "AI copilot, advanced interview bank, community" },
           ].map((item) => (
             <div key={item.phase} className="flex items-center gap-4">
