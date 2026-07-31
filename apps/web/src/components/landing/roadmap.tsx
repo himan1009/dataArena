@@ -18,8 +18,8 @@ const phases = [
   {
     phase: "Next",
     title: "Engagement",
-    summary: "Search, practice, and retention",
-    items: ["Global search", "SQL practice sandbox", "Bookmarks & progress", "AI copilot v1"],
+    summary: "Practice labs and AI assistance",
+    items: ["SQL practice sandbox", "AI copilot v1", "Interview question bank"],
     active: false,
   },
   {

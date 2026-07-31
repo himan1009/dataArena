@@ -5,9 +5,7 @@ import { motion } from "framer-motion";
 import {
   ArrowUpRight,
   Bot,
-  Bookmark,
   FileText,
-  Search,
   Terminal,
   TrendingUp,
 } from "lucide-react";
@@ -47,22 +45,6 @@ const features = [
       "Ask questions, get explanations, and debug queries without leaving the page.",
     span: "",
     status: "Next",
-  },
-  {
-    icon: Search,
-    title: "Global Search",
-    description:
-      "Find notes, practice problems, and interview questions in one search bar.",
-    span: "lg:col-span-2",
-    status: "Planned",
-  },
-  {
-    icon: Bookmark,
-    title: "Bookmarks & Progress",
-    description:
-      "Save articles and pick up exactly where you stopped.",
-    span: "",
-    status: "Planned",
   },
   {
     icon: TrendingUp,

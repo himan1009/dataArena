@@ -1,14 +1,11 @@
 import Link from "next/link";
 import {
   BookOpen,
-  Bookmark,
   Bot,
   Briefcase,
   Code2,
   LayoutDashboard,
   PenLine,
-  Search,
-  TrendingUp,
   ArrowUpRight,
 } from "lucide-react";
 
@@ -64,15 +61,6 @@ const exploreSections = [
     featured: true,
   },
   {
-    title: "Search",
-    description: "Find topics, notes, and interview content.",
-    href: "/search",
-    icon: Search,
-    tint: "gold" as const,
-    ready: false,
-    featured: false,
-  },
-  {
     title: "AI Copilot",
     description: "Get help on any page you're reading.",
     href: "/copilot",
@@ -81,13 +69,6 @@ const exploreSections = [
     ready: false,
     featured: false,
   },
-];
-
-const stats = [
-  { label: "Topics started", value: "0", icon: BookOpen, tint: "gold" as const, valueClass: "stat-gold" },
-  { label: "Problems solved", value: "0", icon: Code2, tint: "teal" as const, valueClass: "stat-teal" },
-  { label: "Bookmarks", value: "0", icon: Bookmark, tint: "primary" as const, valueClass: "stat-primary" },
-  { label: "Day streak", value: "0", icon: TrendingUp, tint: "violet" as const, valueClass: "stat-violet" },
 ];
 
 export default async function DashboardPage() {
@@ -164,47 +145,37 @@ export default async function DashboardPage() {
 
       <JoinCommunityCard />
 
-      <section>
-        <div className="mb-5">
-          <p className="section-label mb-2">More tools</p>
-          <h3 className="text-lg font-semibold">Coming soon</h3>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {moreSections.map((section) => (
-            <Link
-              key={section.title}
-              href={section.href}
-              className="glass-panel glass-panel-hover group p-6"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <IconBox icon={section.icon} size="md" tint={section.tint} />
-                <div className="flex items-center gap-2">
-                  {!section.ready && (
-                    <Badge className="border-0 bg-white/[0.05] px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                      Soon
-                    </Badge>
-                  )}
-                  <ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" />
-                </div>
-              </div>
-              <h4 className="mt-5 font-medium">{section.title}</h4>
-              <p className="mt-1.5 text-sm text-muted-foreground">{section.description}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="glass-panel p-5 sm:p-6">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
-              <IconBox icon={stat.icon} size="sm" tint={stat.tint} />
-            </div>
-            <p className={cn("stat-value mt-4", stat.valueClass)}>{stat.value}</p>
+      {moreSections.length > 0 && (
+        <section>
+          <div className="mb-5">
+            <p className="section-label mb-2">More tools</p>
+            <h3 className="text-lg font-semibold">Coming soon</h3>
           </div>
-        ))}
-      </section>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {moreSections.map((section) => (
+              <Link
+                key={section.title}
+                href={section.href}
+                className="glass-panel glass-panel-hover group p-6"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <IconBox icon={section.icon} size="md" tint={section.tint} />
+                  <div className="flex items-center gap-2">
+                    {!section.ready && (
+                      <Badge className="border-0 bg-white/[0.05] px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                        Soon
+                      </Badge>
+                    )}
+                    <ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" />
+                  </div>
+                </div>
+                <h4 className="mt-5 font-medium">{section.title}</h4>
+                <p className="mt-1.5 text-sm text-muted-foreground">{section.description}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="glass-panel p-6 sm:p-7">
         <p className="section-label mb-2">Roadmap</p>
@@ -215,8 +186,8 @@ export default async function DashboardPage() {
         <div className="mt-6 space-y-3">
           {[
             { phase: "Now", text: "Notes, interviews, practice, author workflow, admin tools" },
-            { phase: "Next", text: "Search, bookmarks, SQL practice sandbox" },
-            { phase: "Later", text: "AI copilot, advanced interview bank, community" },
+            { phase: "Next", text: "SQL practice sandbox, AI copilot" },
+            { phase: "Later", text: "Advanced interview bank, community features" },
           ].map((item) => (
             <div key={item.phase} className="flex items-center gap-4">
               <Badge
