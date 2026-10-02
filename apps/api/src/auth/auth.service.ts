@@ -132,6 +132,24 @@ export class AuthService {
 
     await this.issueAuthTokens(safeUser, response);
 
+    if (!safeUser.emailVerified) {
+      const activeToken = await this.prisma.emailVerificationToken.findFirst({
+        where: {
+          userId: safeUser.id,
+          expiresAt: { gt: new Date() },
+        },
+        select: { id: true },
+      });
+
+      if (!activeToken) {
+        void this.trySendVerificationEmail(
+          safeUser.id,
+          safeUser.email,
+          safeUser.name,
+        );
+      }
+    }
+
     return {
       user: safeUser,
       message: 'Login successful',

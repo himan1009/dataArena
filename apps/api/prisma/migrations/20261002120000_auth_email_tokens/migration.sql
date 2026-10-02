@@ -30,5 +30,4 @@ CREATE INDEX "password_reset_tokens_userId_idx" ON "password_reset_tokens"("user
 ALTER TABLE "email_verification_tokens" ADD CONSTRAINT "email_verification_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "password_reset_tokens" ADD CONSTRAINT "password_reset_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- Existing accounts keep full access; only new signups after this deploy require verification.
-UPDATE "users" SET "emailVerified" = true WHERE "emailVerified" = false;
+-- Do not auto-mark legacy users verified here; a follow-up migration handles legacy vs new signups.

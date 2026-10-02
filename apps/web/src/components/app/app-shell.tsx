@@ -33,7 +33,7 @@ export function AppShell({
 
       <div className={`relative flex min-h-0 min-w-0 flex-1 flex-col lg:pl-[18rem]`}>
         <AppHeader user={user} />
-        <AppMain>{children}</AppMain>
+        <AppMain user={user}>{children}</AppMain>
       </div>
     </div>
   );

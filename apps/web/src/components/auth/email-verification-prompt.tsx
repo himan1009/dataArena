@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { Loader2, MailCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -17,14 +17,13 @@ export function EmailVerificationPrompt({
   emailVerified?: boolean;
 }) {
   const router = useRouter();
+  const needsVerification = emailVerified !== true;
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const needsVerification = emailVerified === false;
-
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!needsVerification) {
       setOpen(false);
       return;
@@ -42,6 +41,7 @@ export function EmailVerificationPrompt({
     try {
       const response = await authApi.resendVerification();
       setFeedback(response.message);
+      router.refresh();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not send email");
     } finally {
@@ -73,9 +73,9 @@ export function EmailVerificationPrompt({
           Verify your email
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          We sent a verification link to{" "}
-          <span className="font-medium text-foreground">{email}</span>. Confirm your
-          email to secure your account and get full access.
+          Please confirm{" "}
+          <span className="font-medium text-foreground">{email}</span> belongs to you.
+          Check your inbox for the link, or tap resend below.
         </p>
 
         {feedback && (
@@ -109,10 +109,7 @@ export function EmailVerificationPrompt({
             type="button"
             variant="outline"
             className="flex-1 border-white/[0.1]"
-            onClick={() => {
-              handleLater();
-              router.refresh();
-            }}
+            onClick={handleLater}
           >
             Remind me later
           </Button>

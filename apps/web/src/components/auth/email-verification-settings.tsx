@@ -18,7 +18,7 @@ export function EmailVerificationSettings({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  if (emailVerified !== false) {
+  if (emailVerified === true) {
     return (
       <Badge className="mt-2.5 border-0 bg-teal-muted px-3 py-1 text-xs font-medium text-teal">
         Verified

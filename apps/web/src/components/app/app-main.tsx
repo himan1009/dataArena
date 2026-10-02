@@ -2,9 +2,17 @@
 
 import { usePathname } from "next/navigation";
 
+import { EmailVerificationBanner } from "@/components/auth/email-verification-banner";
 import { PageContainer } from "@/components/ui/page-container";
+import type { AuthUser } from "@/lib/api";
 
-export function AppMain({ children }: { children: React.ReactNode }) {
+export function AppMain({
+  user,
+  children,
+}: {
+  user: AuthUser;
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const isArticleEditor = /^\/write\/[^/]+$/.test(pathname);
   const isAdminArticleEditor = /^\/admin\/notes\/[^/]+\/edit$/.test(pathname);
@@ -40,6 +48,7 @@ export function AppMain({ children }: { children: React.ReactNode }) {
                 : undefined
         }
       >
+        {!isEditorLayout && <EmailVerificationBanner emailVerified={user.emailVerified} />}
         {children}
       </PageContainer>
     </main>
