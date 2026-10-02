@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 
+import { ExistingAccountDialog } from "@/components/auth/existing-account-dialog";
 import {
   AuthFooterLink,
   AuthLayout,
@@ -15,11 +16,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiError, authApi } from "@/lib/api";
+import { isExistingAccountAuthError } from "@/lib/auth-error-utils";
 import { type RegisterFormValues, registerSchema } from "@/lib/auth-schemas";
 
 export function RegisterForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [existingEmail, setExistingEmail] = useState<string | null>(null);
 
   const {
     register,
@@ -31,6 +34,7 @@ export function RegisterForm() {
 
   const onSubmit = async (values: RegisterFormValues) => {
     setError(null);
+    setExistingEmail(null);
 
     try {
       await authApi.register({
@@ -41,6 +45,11 @@ export function RegisterForm() {
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
+      if (err instanceof ApiError && isExistingAccountAuthError(err)) {
+        setExistingEmail(values.email.trim().toLowerCase());
+        return;
+      }
+
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
@@ -54,6 +63,13 @@ export function RegisterForm() {
       title="Create your account"
       subtitle="Start your data engineering journey today"
     >
+      <ExistingAccountDialog
+        email={existingEmail ?? ""}
+        open={Boolean(existingEmail)}
+        variant="register"
+        onClose={() => setExistingEmail(null)}
+      />
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         {error && (
           <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">

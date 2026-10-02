@@ -57,7 +57,10 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new ConflictException('Email is already registered');
+      throw new ConflictException({
+        message: 'An account with this email already exists.',
+        code: 'EMAIL_ALREADY_REGISTERED',
+      });
     }
 
     const userCount = await this.prisma.user.count();
@@ -112,7 +115,10 @@ export class AuthService {
     const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
 
     if (!passwordValid) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException({
+        message: 'Incorrect password for this account.',
+        code: 'INVALID_PASSWORD_EXISTING_ACCOUNT',
+      });
     }
 
     if (!user.isActive) {

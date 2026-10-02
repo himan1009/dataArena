@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
@@ -13,5 +14,9 @@ export default async function ForgotPasswordPage() {
     redirect("/dashboard");
   }
 
-  return <ForgotPasswordForm />;
+  return (
+    <Suspense fallback={null}>
+      <ForgotPasswordForm />
+    </Suspense>
+  );
 }

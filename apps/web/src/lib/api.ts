@@ -34,9 +34,19 @@ export async function apiRequest<T>(
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
+    const nestedMessage =
+      data.message &&
+      typeof data.message === "object" &&
+      !Array.isArray(data.message) &&
+      typeof (data.message as { message?: unknown }).message === "string"
+        ? (data.message as { message: string }).message
+        : null;
+
     const message =
       typeof data.message === "string"
         ? data.message
+        : nestedMessage
+          ? nestedMessage
         : Array.isArray(data.message)
           ? data.message.join(", ")
           : typeof data.error === "string"
