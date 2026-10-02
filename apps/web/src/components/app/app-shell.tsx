@@ -2,6 +2,7 @@ import { Suspense } from "react";
 
 import type { AuthUser } from "@/lib/api";
 
+import { EmailVerificationPrompt } from "@/components/auth/email-verification-prompt";
 import { MeshBackground } from "@/components/ui/mesh-background";
 import { NavigationProgress } from "@/components/ui/navigation-progress";
 import { AppHeader } from "./app-header";
@@ -17,6 +18,10 @@ export function AppShell({
 }) {
   return (
     <div className="relative flex min-h-screen">
+      <EmailVerificationPrompt
+        email={user.email}
+        emailVerified={user.emailVerified}
+      />
       <Suspense fallback={null}>
         <NavigationProgress />
       </Suspense>

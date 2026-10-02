@@ -22,6 +22,7 @@ export class UsersService {
         role: true,
         linkedinUrl: true,
         canUploadQuestions: true,
+        emailVerified: true,
         isActive: true,
         deactivatedAt: true,
         createdAt: true,

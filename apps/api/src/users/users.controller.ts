@@ -30,6 +30,7 @@ export class UsersController {
         createdAt: user.createdAt,
         publishedArticleCount: user._count.articles,
         canUploadQuestions: user.canUploadQuestions,
+        emailVerified: user.emailVerified,
       })),
     };
   }

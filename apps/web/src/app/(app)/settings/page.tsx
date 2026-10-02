@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Bug, Mail, Settings, User } from "lucide-react";
 
+import { EmailVerificationSettings } from "@/components/auth/email-verification-settings";
 import { LinkedinProfileForm } from "@/components/author/linkedin-profile-form";
 import { AppPage } from "@/components/ui/app-page";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +33,6 @@ export default async function SettingsPage() {
         <div className="mt-7 space-y-0 divide-y divide-white/[0.06]">
           {[
             { label: "Name", value: user.name || "Not set" },
-            { label: "Email", value: user.email },
           ].map((field) => (
             <div key={field.label} className="py-5 first:pt-0 last:pb-0">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -41,6 +41,13 @@ export default async function SettingsPage() {
               <p className="mt-2 font-medium">{field.value}</p>
             </div>
           ))}
+          <div className="py-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              Email
+            </p>
+            <p className="mt-2 font-medium">{user.email}</p>
+            <EmailVerificationSettings emailVerified={user.emailVerified} />
+          </div>
           <div className="py-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               Role

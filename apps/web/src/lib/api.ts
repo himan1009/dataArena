@@ -64,6 +64,7 @@ export type AuthUser = {
   role: string;
   linkedinUrl?: string | null;
   canUploadQuestions?: boolean;
+  emailVerified?: boolean;
   createdAt?: string;
 };
 
@@ -101,5 +102,28 @@ export const authApi = {
     apiRequest<{ user: AuthUser; message: string }>("/auth/profile", {
       method: "PATCH",
       body: payload,
+    }),
+
+  forgotPassword: (payload: { email: string }) =>
+    apiRequest<{ message: string }>("/auth/forgot-password", {
+      method: "POST",
+      body: payload,
+    }),
+
+  resetPassword: (payload: { token: string; password: string }) =>
+    apiRequest<{ message: string }>("/auth/reset-password", {
+      method: "POST",
+      body: payload,
+    }),
+
+  verifyEmail: (payload: { token: string }) =>
+    apiRequest<{ message: string; user?: AuthUser }>("/auth/verify-email", {
+      method: "POST",
+      body: payload,
+    }),
+
+  resendVerification: () =>
+    apiRequest<{ message: string }>("/auth/resend-verification", {
+      method: "POST",
     }),
 };

@@ -31,3 +31,9 @@ services:
         sync: false
       - key: JWT_REFRESH_SECRET
         sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false
+      - key: BREVO_SENDER_NAME
+        sync: false
