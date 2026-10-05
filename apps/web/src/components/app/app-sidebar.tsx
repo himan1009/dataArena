@@ -6,13 +6,14 @@ import { Loader2 } from "lucide-react";
 
 import { Logo } from "@/components/brand/logo";
 import { JoinCommunityNavLink } from "@/components/community";
+import { adminSidebarLinks } from "@/config/admin-navigation";
 import {
   creatorNavItems,
   mainNavItems,
   secondaryNavItems,
   type NavItem,
 } from "@/config/app-navigation";
-import { getAccountTierLabel, isCreator } from "@/lib/auth-utils";
+import { getAccountTierLabel, isAdmin, isCreator } from "@/lib/auth-utils";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -81,12 +82,10 @@ export function AppSidebar({
   onNavigate?: () => void;
   className?: string;
 }) {
-  const visibleSecondary = secondaryNavItems.filter(
-    (item) => {
-      if (item.adminOnly && user.role !== "ADMIN") return false;
-      return true;
-    },
-  );
+  const visibleSecondary = secondaryNavItems.filter((item) => {
+    if (item.adminOnly && !isAdmin(user)) return false;
+    return true;
+  });
 
   const userIsCreator = isCreator(user);
 
@@ -94,6 +93,18 @@ export function AppSidebar({
     if (item.editorOnly && !userIsCreator) return false;
     return true;
   });
+
+  const visibleAdminTools = isAdmin(user)
+    ? adminSidebarLinks.map(
+        (link): NavItem => ({
+          title: link.title,
+          href: link.href,
+          icon: link.icon,
+          description: link.description,
+          adminOnly: true,
+        }),
+      )
+    : [];
 
   const visibleCreator = creatorNavItems.filter((item) => {
     if (item.editorOnly && user.role !== "EDITOR" && user.role !== "ADMIN") {
@@ -141,6 +152,18 @@ export function AppSidebar({
           <p className="section-label mb-4 px-3">Community</p>
           <JoinCommunityNavLink onNavigate={onNavigate} />
         </nav>
+
+        {visibleAdminTools.length > 0 && (
+          <>
+            <Separator className="my-7 bg-white/[0.06]" />
+            <nav className="space-y-1.5">
+              <p className="section-label mb-4 px-3">Admin tools</p>
+              {visibleAdminTools.map((item) => (
+                <NavLink key={item.href} item={item} onNavigate={onNavigate} />
+              ))}
+            </nav>
+          </>
+        )}
 
         <Separator className="my-7 bg-white/[0.06]" />
 

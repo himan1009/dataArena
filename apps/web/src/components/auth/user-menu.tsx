@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { LayoutDashboard, LogOut, User } from "lucide-react";
+import { Clapperboard, LayoutDashboard, LogOut, Shield, User } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { authApi, type AuthUser } from "@/lib/api";
+import { isAdmin } from "@/lib/auth-utils";
 import { cn } from "@/lib/utils";
 
 function getInitials(user: AuthUser) {
@@ -137,6 +138,19 @@ export function UserMenu({ user }: { user: AuthUser }) {
             <User className="size-4" />
             Settings
           </MenuItem>
+
+          {isAdmin(user) && (
+            <>
+              <MenuItem href="/admin" onClick={close}>
+                <Shield className="size-4" />
+                Admin hub
+              </MenuItem>
+              <MenuItem href="/admin/shorts" onClick={close}>
+                <Clapperboard className="size-4" />
+                Shorts CMS
+              </MenuItem>
+            </>
+          )}
 
           <div className="my-1 h-px bg-white/[0.06]" />
 

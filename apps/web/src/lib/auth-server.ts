@@ -71,7 +71,7 @@ export async function requireUser(): Promise<AuthUser> {
 export async function requireAdmin(): Promise<AuthUser> {
   const user = await requireUser();
 
-  if (user.role !== "ADMIN") {
+  if (!isAdmin(user)) {
     redirect("/dashboard");
   }
 

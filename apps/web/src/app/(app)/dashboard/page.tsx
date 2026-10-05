@@ -16,7 +16,12 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { IconBox } from "@/components/ui/icon-box";
 import { PageIntro } from "@/components/ui/page-intro";
-import { requireUser, isEditorOrAdmin, canUploadPracticeQuestions } from "@/lib/auth-server";
+import {
+  requireUser,
+  isEditorOrAdmin,
+  canUploadPracticeQuestions,
+  isAdmin,
+} from "@/lib/auth-server";
 import { cn } from "@/lib/utils";
 
 export const metadata = {
@@ -87,6 +92,7 @@ export default async function DashboardPage() {
   const greeting = firstName ? `Welcome back, ${firstName}` : "Welcome back";
   const canWrite = isEditorOrAdmin(user);
   const canContributePractice = canUploadPracticeQuestions(user);
+  const userIsAdmin = isAdmin(user);
 
   const visibleSections = exploreSections.filter(
     (section) => !section.editorOnly || canWrite,
@@ -106,6 +112,33 @@ export default async function DashboardPage() {
             : "Jump into notes, short videos, and interview experiences."
         }
       />
+
+      {userIsAdmin && (
+        <section className="glass-panel flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gold">
+              Admin
+            </p>
+            <h3 className="mt-2 text-lg font-semibold">Short videos (YouTube)</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Add topics and embed Shorts in Shorts CMS. Members watch them under Shorts in the
+              sidebar.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/admin/shorts" className={cn(buttonVariants(), "w-fit shrink-0")}>
+              <Clapperboard className="size-4" />
+              Shorts CMS
+            </Link>
+            <Link
+              href="/admin"
+              className={cn(buttonVariants({ variant: "outline" }), "w-fit shrink-0")}
+            >
+              Admin hub
+            </Link>
+          </div>
+        </section>
+      )}
 
       {canContributePractice && (
         <section className="glass-panel flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">

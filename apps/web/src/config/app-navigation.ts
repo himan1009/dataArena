@@ -84,7 +84,7 @@ export const secondaryNavItems: NavItem[] = [
     title: "Admin",
     href: "/admin",
     icon: Shield,
-    description: "Articles, practice, reviews, inbox, and users",
+    description: "Articles, practice, shorts, reviews, inbox, and users",
     adminOnly: true,
   },
 ];
