@@ -50,6 +50,7 @@ export const config = {
     "/interviews/:path*",
     "/write/:path*",
     "/practice/:path*",
+    "/shorts/:path*",
     "/copilot/:path*",
     "/settings/:path*",
     "/admin/:path*",

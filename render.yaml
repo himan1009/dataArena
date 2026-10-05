@@ -37,3 +37,8 @@ services:
         sync: false
       - key: BREVO_SENDER_NAME
         sync: false
+      # Self keep-alive: API pings its own /health/ready every 8 min (uses RENDER_EXTERNAL_URL).
+      - key: KEEPALIVE_ENABLED
+        value: "true"
+      - key: KEEPALIVE_INTERVAL_MINUTES
+        value: "8"

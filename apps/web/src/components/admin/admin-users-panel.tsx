@@ -19,6 +19,21 @@ const roleLabels: Record<AdminUser["role"], string> = {
   ADMIN: "Admin",
 };
 
+function isCreatorAccount(user: AdminUser) {
+  return (
+    user.role === "ADMIN" ||
+    user.role === "EDITOR" ||
+    user.canUploadQuestions
+  );
+}
+
+function accountTierLabel(user: AdminUser) {
+  if (user.role === "ADMIN") return "Creator (admin)";
+  if (user.role === "EDITOR") return "Creator (editor)";
+  if (user.canUploadQuestions) return "Creator (practice)";
+  return "Member";
+}
+
 export function AdminUsersPanel({
   users,
   currentUserId,
@@ -48,14 +63,15 @@ export function AdminUsersPanel({
     <div className="space-y-6">
       <div className="glass-panel p-5 text-sm text-muted-foreground sm:p-6">
         <p>
-          Promote users to <strong className="text-foreground">Editor</strong> when they
-          contribute articles. Use <strong className="text-foreground">Practice upload</strong> to
-          let a user add practice questions (categories and topics stay admin-only in Practice CMS).
+          Accounts fall into <strong className="text-foreground">Creators</strong> (admin, editor, or
+          practice upload) and <strong className="text-foreground">Members</strong> (everyone else).
+          Assign <strong className="text-foreground">Editor</strong> for article workflows, or toggle{" "}
+          <strong className="text-foreground">Practice upload</strong> for question contributors.
+          Shorts and practice structure stay admin-only in their CMS pages.
         </p>
         <p className="mt-2">
-          After you click <strong className="text-foreground">Allow upload</strong>, that user will
-          see <strong className="text-foreground">Add question</strong> on the Practice page and in
-          the sidebar. Questions still go through admin review before publishing.
+          Practice upload shows <strong className="text-foreground">Add question</strong> on Practice;
+          submissions still require admin review before publishing.
         </p>
         <p className="mt-2">
           Deactivating a user blocks login, but their name and LinkedIn stay on every
@@ -75,6 +91,7 @@ export function AdminUsersPanel({
             <thead>
               <tr className="border-b border-white/[0.06] text-xs uppercase tracking-[0.14em] text-muted-foreground">
                 <th className="px-5 py-4 font-semibold">User</th>
+                <th className="px-5 py-4 font-semibold">Tier</th>
                 <th className="px-5 py-4 font-semibold">Role</th>
                 <th className="px-5 py-4 font-semibold">Practice upload</th>
                 <th className="px-5 py-4 font-semibold">Status</th>
@@ -83,7 +100,14 @@ export function AdminUsersPanel({
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => {
+              {[...users]
+                .sort((a, b) => {
+                  const tier = (u: AdminUser) => (isCreatorAccount(u) ? 0 : 1);
+                  const byTier = tier(a) - tier(b);
+                  if (byTier !== 0) return byTier;
+                  return (a.email ?? "").localeCompare(b.email ?? "");
+                })
+                .map((user) => {
                 const isSelf = user.id === currentUserId;
                 const isAdmin = user.role === "ADMIN";
                 const roleKey = `role-${user.id}`;
@@ -111,6 +135,17 @@ export function AdminUsersPanel({
                           LinkedIn
                         </a>
                       )}
+                    </td>
+                    <td className="px-5 py-4">
+                      <Badge
+                        className={
+                          isCreatorAccount(user)
+                            ? "border-0 bg-gold-muted text-gold"
+                            : "border-0 bg-white/[0.06] text-muted-foreground"
+                        }
+                      >
+                        {accountTierLabel(user)}
+                      </Badge>
                     </td>
                     <td className="px-5 py-4">
                       {isAdmin ? (

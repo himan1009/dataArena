@@ -6,7 +6,13 @@ import { Loader2 } from "lucide-react";
 
 import { Logo } from "@/components/brand/logo";
 import { JoinCommunityNavLink } from "@/components/community";
-import { mainNavItems, secondaryNavItems, type NavItem } from "@/config/app-navigation";
+import {
+  creatorNavItems,
+  mainNavItems,
+  secondaryNavItems,
+  type NavItem,
+} from "@/config/app-navigation";
+import { getAccountTierLabel, isCreator } from "@/lib/auth-utils";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -82,10 +88,18 @@ export function AppSidebar({
     },
   );
 
+  const userIsCreator = isCreator(user);
+
   const visibleMain = mainNavItems.filter((item) => {
+    if (item.editorOnly && !userIsCreator) return false;
+    return true;
+  });
+
+  const visibleCreator = creatorNavItems.filter((item) => {
     if (item.editorOnly && user.role !== "EDITOR" && user.role !== "ADMIN") {
       return false;
     }
+    if (item.creatorOnly && !userIsCreator) return false;
     return true;
   });
 
@@ -108,6 +122,18 @@ export function AppSidebar({
             <NavLink key={item.href} item={item} onNavigate={onNavigate} />
           ))}
         </nav>
+
+        {visibleCreator.length > 0 && (
+          <>
+            <Separator className="my-7 bg-white/[0.06]" />
+            <nav className="space-y-1.5">
+              <p className="section-label mb-4 px-3">Creator</p>
+              {visibleCreator.map((item) => (
+                <NavLink key={item.href} item={item} onNavigate={onNavigate} />
+              ))}
+            </nav>
+          </>
+        )}
 
         <Separator className="my-7 bg-white/[0.06]" />
 
@@ -136,7 +162,7 @@ export function AppSidebar({
           </p>
           <p className="mt-1 truncate text-xs text-muted-foreground">{user.email}</p>
           <Badge className="mt-3 border-0 bg-gold-muted px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gold">
-            {user.role}
+            {getAccountTierLabel(user)}
           </Badge>
         </Link>
       </div>

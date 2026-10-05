@@ -489,3 +489,67 @@ model PracticeQuestion {
   @@index([topicId, sortOrder])
   @@map("practice_questions")
 }
+
+enum ShortContentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model ShortTopic {
+  id          String             @id @default(cuid())
+  name        String
+  slug        String             @unique
+  description String?
+  sortOrder   Int                @default(0)
+  status      ShortContentStatus @default(ACTIVE)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  subtopics ShortSubtopic[]
+  videos    ShortVideo[]
+
+  @@index([status])
+  @@index([sortOrder])
+  @@map("short_topics")
+}
+
+model ShortSubtopic {
+  id        String             @id @default(cuid())
+  topicId   String
+  name      String
+  slug      String
+  sortOrder Int                @default(0)
+  status    ShortContentStatus @default(ACTIVE)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  topic  ShortTopic   @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  videos ShortVideo[]
+
+  @@unique([topicId, slug])
+  @@index([topicId])
+  @@map("short_subtopics")
+}
+
+model ShortVideo {
+  id             String             @id @default(cuid())
+  topicId        String
+  subtopicId     String
+  title          String
+  description    String?            @db.Text
+  youtubeUrl     String
+  youtubeVideoId String
+  sortOrder      Int                @default(0)
+  status         ShortContentStatus @default(ACTIVE)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  topic    ShortTopic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  subtopic ShortSubtopic @relation(fields: [subtopicId], references: [id], onDelete: Cascade)
+
+  @@index([topicId])
+  @@index([subtopicId])
+  @@index([status])
+  @@index([subtopicId, sortOrder])
+  @@map("short_videos")
+}

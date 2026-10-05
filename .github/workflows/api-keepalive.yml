@@ -1,0 +1,26 @@
+# Pings the production API every 8 minutes so Render free tier stays awake (~15 min idle sleep).
+# Add repository secret: API_KEEPALIVE_URL = https://YOUR-API.onrender.com/api/v1/health/ready
+name: API keep-alive
+
+on:
+  schedule:
+    # UTC — at minute 0, 8, 16, … (GitHub may delay a few minutes on busy days)
+    - cron: "*/8 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Hit health/ready (API + database)
+        env:
+          API_KEEPALIVE_URL: ${{ secrets.API_KEEPALIVE_URL }}
+        run: |
+          if [ -z "$API_KEEPALIVE_URL" ]; then
+            echo "Skip: set repository secret API_KEEPALIVE_URL to your /api/v1/health/ready URL"
+            exit 0
+          fi
+          echo "Pinging $API_KEEPALIVE_URL"
+          curl -fsS --connect-timeout 15 --max-time 90 "$API_KEEPALIVE_URL"
+          echo "OK"

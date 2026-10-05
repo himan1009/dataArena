@@ -2,6 +2,7 @@ import {
   BookOpen,
   Bot,
   Briefcase,
+  Clapperboard,
   Code2,
   LayoutDashboard,
   PenLine,
@@ -18,6 +19,7 @@ export type NavItem = {
   badge?: string;
   adminOnly?: boolean;
   editorOnly?: boolean;
+  creatorOnly?: boolean;
 };
 
 export const mainNavItems: NavItem[] = [
@@ -40,11 +42,10 @@ export const mainNavItems: NavItem[] = [
     description: "Community interview experiences",
   },
   {
-    title: "Write",
-    href: "/write",
-    icon: PenLine,
-    description: "Author workspace",
-    editorOnly: true,
+    title: "Shorts",
+    href: "/shorts",
+    icon: Clapperboard,
+    description: "Embedded YouTube short videos by topic",
   },
   {
     title: "Practice",
@@ -58,6 +59,17 @@ export const mainNavItems: NavItem[] = [
     icon: Bot,
     description: "Contextual AI assistant",
     badge: "Soon",
+  },
+];
+
+export const creatorNavItems: NavItem[] = [
+  {
+    title: "Write",
+    href: "/write",
+    icon: PenLine,
+    description: "Author workspace",
+    creatorOnly: true,
+    editorOnly: true,
   },
 ];
 
@@ -81,6 +93,7 @@ export const protectedRoutes = [
   "/dashboard",
   "/notes",
   "/practice",
+  "/shorts",
   "/write",
   "/copilot",
   "/settings",

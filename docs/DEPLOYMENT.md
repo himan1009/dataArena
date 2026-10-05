@@ -97,6 +97,71 @@ Save this — you paste it into Render as `DATABASE_URL`.
 
 **Test:** open `https://YOUR-API.onrender.com/api/v1/standards` — expect JSON (first load may be slow on free tier).
 
+**Health (keep Render + DB warm):**
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /api/v1/health/live` | Fast liveness (no DB) |
+| `GET /api/v1/health/ready` | Runs `SELECT 1` on Postgres — **use for keep-alive** |
+
+Example: `https://YOUR-API.onrender.com/api/v1/health/ready` → `{"status":"ok",...}` when API and database are up.
+
+---
+
+## Keep-alive (every ~8 minutes)
+
+Render **free** web services sleep after ~**15 minutes** with **no incoming traffic**. The API can ping its own public URL on a timer so Render sees traffic and stays awake (and `SELECT 1` keeps the DB connection warm).
+
+### A — Render env (recommended, no GitHub / no paid cron)
+
+On your **Render Web Service** → **Environment**:
+
+| Variable | Value |
+|----------|--------|
+| `KEEPALIVE_ENABLED` | `true` |
+| `KEEPALIVE_INTERVAL_MINUTES` | `8` (optional; default 8) |
+
+You do **not** need to set `KEEPALIVE_URL` on Render — Render sets **`RENDER_EXTERNAL_URL`** for you; the app calls  
+`{RENDER_EXTERNAL_URL}/api/v1/health/ready`.
+
+If you created the service manually (not Blueprint), add those two vars and **Redeploy**.
+
+After deploy, open the health URL once (or wait for the first self-ping). While the process is running, pings repeat every 8 minutes.
+
+> If the service is **fully asleep** (zero traffic for 15+ min), the process is stopped and timers do not run. One visit (or UptimeRobot) wakes it; then self keep-alive holds it awake.
+
+`render.yaml` in this repo already sets `KEEPALIVE_ENABLED=true` for Blueprint deploys.
+
+**Avoid triple pings:** If Render self keep-alive is on, you do **not** need Vercel cron and GitHub Actions at the same time (optional backup only).
+
+### B — GitHub Actions (backup, free)
+
+1. Push the repo so `.github/workflows/api-keepalive.yml` is on GitHub.
+2. GitHub repo → **Settings → Secrets and variables → Actions** → **New repository secret**
+3. Name: `API_KEEPALIVE_URL`  
+   Value: `https://YOUR-API.onrender.com/api/v1/health/ready`
+4. **Actions** tab → open **API keep-alive** → **Run workflow** once to test.
+
+Schedule: every 8 minutes (UTC). GitHub may delay a few minutes on busy days.
+
+If the secret is missing, the workflow skips quietly (for local-only clones).
+
+### C — UptimeRobot (backup, free, no code)
+
+1. [uptimerobot.com](https://uptimerobot.com) → **Add monitor**
+2. Type: **HTTP(s)**
+3. URL: `https://YOUR-API.onrender.com/api/v1/health/ready`
+4. Monitoring interval: **5 minutes** (free tier)
+
+### D — Vercel Cron (optional)
+
+`apps/web/vercel.json` calls `/api/cron/keepalive` every 8 minutes. That route uses `API_URL` to hit Render.
+
+1. Vercel → **Environment Variables** → `CRON_SECRET` (random string) and existing `API_URL`
+2. Redeploy the frontend.
+
+Vercel may limit cron frequency on **Hobby**; if it does not run every 8 minutes, use **A** or **B**.
+
 ---
 
 ## Step 3 — Vercel (frontend) ~5 min
@@ -145,6 +210,7 @@ API_URL=https://dataarena-api.onrender.com
 - [ ] `API_URL` on Vercel = Render URL
 - [ ] `FRONTEND_URL` on Render = Vercel URL + API redeploy
 - [ ] First user registered (admin)
+- [ ] Keep-alive: `KEEPALIVE_ENABLED=true` on Render API (or GitHub / UptimeRobot backup)
 
 ---
 

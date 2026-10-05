@@ -4,7 +4,9 @@ import { redirect } from "next/navigation";
 import type { AuthUser } from "@/lib/api";
 import {
   canUploadPracticeQuestions,
+  getAccountTierLabel,
   isAdmin,
+  isCreator,
   isEditorOrAdmin,
 } from "@/lib/auth-utils";
 import { applySetCookiesFromResponse } from "@/lib/cookie-utils";
@@ -86,4 +88,10 @@ export async function requireEditor(): Promise<AuthUser> {
   return user;
 }
 
-export { canUploadPracticeQuestions, isAdmin, isEditorOrAdmin };
+export {
+  canUploadPracticeQuestions,
+  getAccountTierLabel,
+  isAdmin,
+  isCreator,
+  isEditorOrAdmin,
+};

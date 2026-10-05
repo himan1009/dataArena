@@ -11,3 +11,15 @@ export function isEditorOrAdmin(user: AuthUser) {
 export function isAdmin(user: AuthUser) {
   return user.role === "ADMIN";
 }
+
+/** Creators: editors, admins, and members with practice-upload permission */
+export function isCreator(user: AuthUser) {
+  return isEditorOrAdmin(user) || canUploadPracticeQuestions(user);
+}
+
+export function getAccountTierLabel(user: AuthUser) {
+  if (user.role === "ADMIN") return "Admin · Creator";
+  if (user.role === "EDITOR") return "Editor · Creator";
+  if (canUploadPracticeQuestions(user)) return "Creator";
+  return "Member";
+}

@@ -1,5 +1,15 @@
 import Link from "next/link";
-import { Shield, ClipboardCheck, Users, BookOpen, Inbox, BookOpenCheck, UserPen, Code2 } from "lucide-react";
+import {
+  Shield,
+  ClipboardCheck,
+  Users,
+  BookOpen,
+  Inbox,
+  BookOpenCheck,
+  UserPen,
+  Code2,
+  Clapperboard,
+} from "lucide-react";
 
 import { AppPage } from "@/components/ui/app-page";
 import { IconBox } from "@/components/ui/icon-box";
@@ -24,6 +34,12 @@ const adminLinks = [
     description: "Create practice categories and topics for the question library.",
     href: "/admin/practice",
     icon: Code2,
+  },
+  {
+    title: "Shorts CMS",
+    description: "Topics, subtopics, and embedded YouTube Shorts for the library.",
+    href: "/admin/shorts",
+    icon: Clapperboard,
   },
   {
     title: "Assign writers",
