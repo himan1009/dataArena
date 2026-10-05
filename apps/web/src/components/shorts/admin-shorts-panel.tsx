@@ -269,10 +269,11 @@ export function AdminShortsPanel({
                 videoId={previewId}
                 title={videoForm.title || "Preview"}
                 variant="inline"
+                className="mx-auto"
               />
             ) : (
               <div
-                className="flex aspect-[9/16] w-full max-w-[17.5rem] items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/[0.02] px-4 text-center text-xs text-muted-foreground"
+                className="flex aspect-[9/16] w-full max-w-[15rem] items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/[0.02] px-4 text-center text-xs text-muted-foreground"
               >
                 Paste a valid YouTube URL to preview
               </div>

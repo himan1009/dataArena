@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { Clapperboard } from "lucide-react";
 
-import { ShortVideoCard } from "@/components/shorts/short-video-card";
+import { ShortsVideoGrid } from "@/components/shorts/shorts-video-grid";
 import { ShortsBreadcrumbs } from "@/components/shorts/shorts-breadcrumbs";
 import { AppPage } from "@/components/ui/app-page";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -39,7 +39,7 @@ export default async function ShortSubtopicPage({ params }: PageProps) {
   const videoCount = subtopic.videos.length;
 
   return (
-    <AppPage size="narrow">
+    <AppPage>
       <ShortsBreadcrumbs
         items={[
           { label: "Shorts", href: "/shorts" },
@@ -54,7 +54,7 @@ export default async function ShortSubtopicPage({ params }: PageProps) {
         title={subtopic.name}
         description={
           videoCount > 0
-            ? `${videoCount} ${videoCount === 1 ? "video" : "videos"} · scroll to watch in order`
+            ? "Watch in order — vertical shorts, embedded in DataArena."
             : "Videos play here in vertical format — no redirect to YouTube."
         }
       />
@@ -66,17 +66,7 @@ export default async function ShortSubtopicPage({ params }: PageProps) {
           description="Your admin can add YouTube links from Shorts CMS."
         />
       ) : (
-        <section className="mx-auto flex w-full max-w-xl flex-col gap-8 pb-4">
-          {subtopic.videos.map((video, index) => (
-            <ShortVideoCard
-              key={video.id}
-              index={index}
-              title={video.title}
-              description={video.description}
-              youtubeVideoId={video.youtubeVideoId}
-            />
-          ))}
-        </section>
+        <ShortsVideoGrid videos={subtopic.videos} />
       )}
     </AppPage>
   );

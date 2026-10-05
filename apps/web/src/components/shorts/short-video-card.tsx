@@ -17,34 +17,37 @@ export function ShortVideoCard({
   return (
     <article
       className={cn(
-        "glass-panel flex w-full max-w-xl flex-col items-center gap-5 p-5 sm:p-7",
+        "glass-panel flex h-full min-h-0 flex-col gap-4 p-4 sm:p-5",
         className,
       )}
     >
-      <div className="flex w-full items-center gap-3">
+      <div className="flex items-start gap-3 border-b border-white/[0.06] pb-4">
         <span
-          className="flex size-9 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-xs font-bold tabular-nums text-primary"
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-xs font-bold tabular-nums text-primary"
           aria-hidden
         >
-          {String(index + 1).padStart(2, "0")}
+          {index + 1}
         </span>
-        <h2 className="min-w-0 flex-1 text-lg font-semibold leading-snug tracking-tight">{title}</h2>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-base font-semibold leading-snug tracking-tight sm:text-[17px]">
+            {title}
+          </h2>
+          {description ? (
+            <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+              {description}
+            </p>
+          ) : null}
+        </div>
       </div>
 
-      <YouTubeShortPlayer
-        videoId={youtubeVideoId}
-        title={title}
-        variant="feed"
-        className="mx-auto w-full"
-      />
-
-      {description ? (
-        <p className="w-full text-sm leading-relaxed text-muted-foreground">{description}</p>
-      ) : null}
-
-      <p className="text-center text-[11px] text-muted-foreground/80">
-        Plays inside DataArena · hosted on YouTube
-      </p>
+      <div className="flex flex-1 flex-col items-center justify-center py-1">
+        <YouTubeShortPlayer
+          videoId={youtubeVideoId}
+          title={title}
+          variant="feed"
+          className="mx-auto"
+        />
+      </div>
     </article>
   );
 }
