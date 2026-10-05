@@ -148,6 +148,14 @@ export class ShortsService {
   }
 
   async adminListTopics() {
+    try {
+      return await this.fetchAdminTopics();
+    } catch (error) {
+      this.rethrowPrisma(error, 'A topic with this slug already exists.');
+    }
+  }
+
+  private async fetchAdminTopics() {
     const topics = await this.prisma.shortTopic.findMany({
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       include: {
@@ -179,7 +187,7 @@ export class ShortsService {
       const topic = await this.prisma.shortTopic.create({ data: dto });
       return { topic };
     } catch (error) {
-      this.rethrowUnique(error, 'A topic with this slug already exists.');
+      this.rethrowPrisma(error, 'A topic with this slug already exists.');
     }
   }
 
@@ -191,7 +199,7 @@ export class ShortsService {
       });
       return { topic };
     } catch (error) {
-      this.rethrowUnique(error, 'A topic with this slug already exists.');
+      this.rethrowPrisma(error, 'A topic with this slug already exists.');
     }
   }
 
@@ -220,7 +228,7 @@ export class ShortsService {
       const subtopic = await this.prisma.shortSubtopic.create({ data: dto });
       return { subtopic };
     } catch (error) {
-      this.rethrowUnique(
+      this.rethrowPrisma(
         error,
         'A subtopic with this slug already exists in that topic.',
       );
@@ -235,7 +243,7 @@ export class ShortsService {
       });
       return { subtopic };
     } catch (error) {
-      this.rethrowUnique(
+      this.rethrowPrisma(
         error,
         'A subtopic with this slug already exists in that topic.',
       );
@@ -324,12 +332,16 @@ export class ShortsService {
     return { success: true };
   }
 
-  private rethrowUnique(error: unknown, message: string): never {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === 'P2002'
-    ) {
-      throw new ConflictException(message);
+  private rethrowPrisma(error: unknown, uniqueMessage: string): never {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        throw new ConflictException(uniqueMessage);
+      }
+      if (error.code === 'P2021') {
+        throw new BadRequestException(
+          'Short videos tables are missing. Run database migrations on the API (prisma migrate deploy).',
+        );
+      }
     }
     throw error;
   }

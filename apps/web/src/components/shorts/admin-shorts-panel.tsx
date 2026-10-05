@@ -13,7 +13,13 @@ import { slugify } from "@/lib/notes-utils";
 import { ShortsApiError, shortsApi, type ShortTopic } from "@/lib/shorts-api";
 import { extractYouTubeVideoId } from "@/lib/youtube-utils";
 
-export function AdminShortsPanel({ topics }: { topics: ShortTopic[] }) {
+export function AdminShortsPanel({
+  topics,
+  apiUnavailable = false,
+}: {
+  topics: ShortTopic[];
+  apiUnavailable?: boolean;
+}) {
   const router = useRouter();
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +83,13 @@ export function AdminShortsPanel({ topics }: { topics: ShortTopic[] }) {
 
   return (
     <div className="space-y-8">
+      {apiUnavailable && (
+        <p className="text-sm text-amber-200/90">
+          Forms below may fail until the API is reachable and migrations are applied. Fix the error
+          above, then refresh this page.
+        </p>
+      )}
+
       {error && (
         <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}

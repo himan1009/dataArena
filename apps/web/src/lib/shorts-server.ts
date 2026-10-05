@@ -3,6 +3,26 @@ import { cookies } from "next/headers";
 import type { ShortTopic, ShortVideo } from "@/lib/shorts-api";
 import { getBackendUrl } from "@/lib/proxy";
 
+function formatShortsApiMessage(data: unknown, status: number): string {
+  if (data && typeof data === "object" && "message" in data) {
+    const raw = (data as { message?: unknown }).message;
+    if (typeof raw === "string" && raw.trim()) return raw;
+    if (Array.isArray(raw)) return raw.join(", ");
+  }
+
+  if (status === 401) {
+    return "Sign in again to load short videos.";
+  }
+  if (status === 403) {
+    return "Admin access required. Log in as an admin account.";
+  }
+  if (status === 503) {
+    return "Cannot reach the API server. Wake Render or check API_URL on Vercel.";
+  }
+
+  return "Failed to load shorts. Ensure the API is deployed and migrations have run.";
+}
+
 export class ShortsApiError extends Error {
   constructor(
     message: string,
@@ -27,10 +47,8 @@ async function fetchShortsApi<T>(path: string): Promise<T> {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new ShortsApiError(
-      typeof data.message === "string" ? data.message : "Failed to load shorts",
-      response.status,
-    );
+    const message = formatShortsApiMessage(data, response.status);
+    throw new ShortsApiError(message, response.status);
   }
 
   return data as T;

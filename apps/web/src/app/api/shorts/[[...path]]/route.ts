@@ -1,14 +1,27 @@
 import { proxyToBackend } from "@/lib/proxy";
 
-type RouteContext = { params: Promise<{ path?: string[] }> };
+type RouteContext = {
+  params: Promise<{ path?: string[] }>;
+};
 
 async function handler(request: Request, context: RouteContext) {
   const { path = [] } = await context.params;
-  const suffix = path.length ? `/${path.join("/")}` : "";
+  const suffix = path.length > 0 ? `/${path.join("/")}` : "";
   return proxyToBackend(`/shorts${suffix}`, request);
 }
 
-export const GET = handler;
-export const POST = handler;
-export const PATCH = handler;
-export const DELETE = handler;
+export async function GET(request: Request, context: RouteContext) {
+  return handler(request, context);
+}
+
+export async function POST(request: Request, context: RouteContext) {
+  return handler(request, context);
+}
+
+export async function PATCH(request: Request, context: RouteContext) {
+  return handler(request, context);
+}
+
+export async function DELETE(request: Request, context: RouteContext) {
+  return handler(request, context);
+}

@@ -25,6 +25,27 @@ const ROUTE_META: Array<{ test: RegExp; meta: PageMeta }> = [
     },
   },
   {
+    test: /^\/admin\/shorts$/,
+    meta: {
+      title: "Shorts CMS",
+      description: "Topics, subtopics, and YouTube embeds",
+    },
+  },
+  {
+    test: /^\/shorts\/[^/]+\/[^/]+$/,
+    meta: {
+      title: "Short videos",
+      description: "Watch embedded YouTube shorts",
+    },
+  },
+  {
+    test: /^\/shorts\/[^/]+$/,
+    meta: {
+      title: "Short videos",
+      description: "Subtopics in this topic",
+    },
+  },
+  {
     test: /^\/admin\/notes\/[^/]+\/edit$/,
     meta: {
       title: "Edit article",
