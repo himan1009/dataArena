@@ -112,7 +112,9 @@ Example: `https://YOUR-API.onrender.com/api/v1/health/ready` → `{"status":"ok"
 
 Render **free** web services sleep after ~**15 minutes** with **no incoming traffic**. The API can ping its own public URL on a timer so Render sees traffic and stays awake (and `SELECT 1` keeps the DB connection warm).
 
-### A — Render env (recommended, no GitHub / no paid cron)
+> **Vercel Hobby:** Do **not** use Vercel Cron for keep-alive (limited on free tier and can cause failed deploys). This repo does **not** ship `vercel.json` crons. Use **Render self-ping** below only.
+
+### A — Render env (recommended — use this alone on free tier)
 
 On your **Render Web Service** → **Environment**:
 
@@ -132,9 +134,9 @@ After deploy, open the health URL once (or wait for the first self-ping). While 
 
 `render.yaml` in this repo already sets `KEEPALIVE_ENABLED=true` for Blueprint deploys.
 
-**Avoid triple pings:** If Render self keep-alive is on, you do **not** need Vercel cron and GitHub Actions at the same time (optional backup only).
+If `KEEPALIVE_ENABLED=true` on Render, you do **not** need GitHub Actions or UptimeRobot unless you want a backup wake-up.
 
-### B — GitHub Actions (backup, free)
+### B — GitHub Actions (optional backup, does not touch Vercel)
 
 1. Push the repo so `.github/workflows/api-keepalive.yml` is on GitHub.
 2. GitHub repo → **Settings → Secrets and variables → Actions** → **New repository secret**
@@ -146,21 +148,12 @@ Schedule: every 8 minutes (UTC). GitHub may delay a few minutes on busy days.
 
 If the secret is missing, the workflow skips quietly (for local-only clones).
 
-### C — UptimeRobot (backup, free, no code)
+### C — UptimeRobot (optional backup, free, no code)
 
 1. [uptimerobot.com](https://uptimerobot.com) → **Add monitor**
 2. Type: **HTTP(s)**
 3. URL: `https://YOUR-API.onrender.com/api/v1/health/ready`
 4. Monitoring interval: **5 minutes** (free tier)
-
-### D — Vercel Cron (optional)
-
-`apps/web/vercel.json` calls `/api/cron/keepalive` every 8 minutes. That route uses `API_URL` to hit Render.
-
-1. Vercel → **Environment Variables** → `CRON_SECRET` (random string) and existing `API_URL`
-2. Redeploy the frontend.
-
-Vercel may limit cron frequency on **Hobby**; if it does not run every 8 minutes, use **A** or **B**.
 
 ---
 
