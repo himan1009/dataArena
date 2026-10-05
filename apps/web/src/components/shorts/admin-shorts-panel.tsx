@@ -206,7 +206,7 @@ export function AdminShortsPanel({
         <p className="text-sm text-muted-foreground">
           Paste a YouTube Shorts or watch URL. Videos play inside DataArena (embedded player).
         </p>
-        <div className="grid gap-6 lg:grid-cols-[1fr_minmax(0,280px)]">
+        <div className="grid gap-8 lg:grid-cols-[1fr_minmax(0,16rem)] lg:items-start">
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Subtopic</Label>
@@ -260,9 +260,24 @@ export function AdminShortsPanel({
               Publish short
             </Button>
           </div>
-          {previewId && (
-            <YouTubeShortPlayer videoId={previewId} title={videoForm.title || "Preview"} />
-          )}
+          <div className="flex flex-col items-center gap-2 lg:sticky lg:top-24">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Live preview
+            </p>
+            {previewId ? (
+              <YouTubeShortPlayer
+                videoId={previewId}
+                title={videoForm.title || "Preview"}
+                variant="inline"
+              />
+            ) : (
+              <div
+                className="flex aspect-[9/16] w-full max-w-[17.5rem] items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/[0.02] px-4 text-center text-xs text-muted-foreground"
+              >
+                Paste a valid YouTube URL to preview
+              </div>
+            )}
+          </div>
         </div>
       </section>
 

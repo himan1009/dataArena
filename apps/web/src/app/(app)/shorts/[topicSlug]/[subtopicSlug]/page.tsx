@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { Clapperboard } from "lucide-react";
 
+import { ShortVideoCard } from "@/components/shorts/short-video-card";
 import { ShortsBreadcrumbs } from "@/components/shorts/shorts-breadcrumbs";
-import { YouTubeShortPlayer } from "@/components/shorts/youtube-short-player";
 import { AppPage } from "@/components/ui/app-page";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageIntro } from "@/components/ui/page-intro";
@@ -36,9 +36,10 @@ export default async function ShortSubtopicPage({ params }: PageProps) {
   }
 
   const { subtopic } = data;
+  const videoCount = subtopic.videos.length;
 
   return (
-    <AppPage>
+    <AppPage size="narrow">
       <ShortsBreadcrumbs
         items={[
           { label: "Shorts", href: "/shorts" },
@@ -51,36 +52,32 @@ export default async function ShortSubtopicPage({ params }: PageProps) {
         icon={Clapperboard}
         label={subtopic.topic.name}
         title={subtopic.name}
-        description="Watch in order. Videos play inside DataArena via YouTube embed."
+        description={
+          videoCount > 0
+            ? `${videoCount} ${videoCount === 1 ? "video" : "videos"} · scroll to watch in order`
+            : "Videos play here in vertical format — no redirect to YouTube."
+        }
       />
 
-      <section className="grid gap-8 lg:grid-cols-2 xl:grid-cols-3">
-        {subtopic.videos.length === 0 ? (
-          <EmptyState
-            className="lg:col-span-2 xl:col-span-3"
-            icon={Clapperboard}
-            title="No shorts in this subtopic yet"
-            description="Your admin can add YouTube links from Shorts CMS."
-          />
-        ) : (
-          subtopic.videos.map((video, index) => (
-            <article key={video.id} className="space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-primary">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <h2 className="text-base font-semibold">{video.title}</h2>
-              </div>
-              <YouTubeShortPlayer videoId={video.youtubeVideoId} title={video.title} />
-              {video.description && (
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {video.description}
-                </p>
-              )}
-            </article>
-          ))
-        )}
-      </section>
+      {videoCount === 0 ? (
+        <EmptyState
+          icon={Clapperboard}
+          title="No shorts in this subtopic yet"
+          description="Your admin can add YouTube links from Shorts CMS."
+        />
+      ) : (
+        <section className="mx-auto flex w-full max-w-xl flex-col gap-8 pb-4">
+          {subtopic.videos.map((video, index) => (
+            <ShortVideoCard
+              key={video.id}
+              index={index}
+              title={video.title}
+              description={video.description}
+              youtubeVideoId={video.youtubeVideoId}
+            />
+          ))}
+        </section>
+      )}
     </AppPage>
   );
 }

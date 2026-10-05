@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FileText, Files } from "lucide-react";
+import { ArrowUpRight, Clapperboard, Files } from "lucide-react";
 
 import { ShortsBreadcrumbs } from "@/components/shorts/shorts-breadcrumbs";
 import { AppPage } from "@/components/ui/app-page";
@@ -48,7 +48,7 @@ export default async function ShortTopicPage({ params }: PageProps) {
       />
 
       <PageIntro
-        icon={FileText}
+        icon={Clapperboard}
         label="Topic"
         title={topic.name}
         description={topic.description ?? "Pick a subtopic to watch embedded YouTube shorts."}
@@ -62,20 +62,23 @@ export default async function ShortTopicPage({ params }: PageProps) {
             <Link
               key={subtopic.id}
               href={`/shorts/${topic.slug}/${subtopic.slug}`}
-              className="glass-panel glass-panel-hover flex items-center justify-between gap-4 px-5 py-4"
+              className="glass-panel glass-panel-hover group flex items-center justify-between gap-4 px-5 py-5 sm:px-6"
             >
               <div className="flex items-center gap-4">
-                <span className="flex size-8 items-center justify-center rounded-full border border-white/15 text-xs font-semibold text-primary">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-xs font-bold tabular-nums text-primary">
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 <div>
-                  <p className="font-medium">{subtopic.name}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="font-semibold tracking-tight">{subtopic.name}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {subtopic.videoCount ?? 0}{" "}
                     {(subtopic.videoCount ?? 0) === 1 ? "short" : "shorts"}
                   </p>
                 </div>
               </div>
+              <ArrowUpRight
+                className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary"
+              />
             </Link>
           ))
         )}
