@@ -18,6 +18,7 @@ const productLinks = [
 const workspaceLinks = [
   { href: "/notes", label: "Notes" },
   { href: "/interviews", label: "Interviews" },
+  { href: "/shorts", label: "Short videos" },
   { href: "/practice", label: "Practice" },
 ];
 

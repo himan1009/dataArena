@@ -102,8 +102,8 @@ export default async function DashboardPage() {
         title={greeting}
         description={
           canWrite
-            ? "Jump into notes, interviews, and your author workspace."
-            : "Jump into notes and interview experiences."
+            ? "Jump into notes, short videos, interviews, and your author workspace."
+            : "Jump into notes, short videos, and interview experiences."
         }
       />
 
@@ -191,11 +191,11 @@ export default async function DashboardPage() {
         <p className="section-label mb-2">Roadmap</p>
         <h3 className="text-lg font-semibold">What&apos;s live now</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Notes, interviews, practice questions, author workflow, and admin tools are available today.
+          Notes, short videos, interviews, practice questions, author workflow, and admin tools are available today.
         </p>
         <div className="mt-6 space-y-3">
           {[
-            { phase: "Now", text: "Notes, interviews, practice, author workflow, admin tools" },
+            { phase: "Now", text: "Notes, short videos, interviews, practice, author workflow, admin tools" },
             { phase: "Next", text: "SQL practice sandbox, AI copilot" },
             { phase: "Later", text: "Advanced interview bank, community features" },
           ].map((item) => (

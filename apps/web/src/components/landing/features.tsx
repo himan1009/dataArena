@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import {
   ArrowUpRight,
   Bot,
+  Clapperboard,
   FileText,
   Terminal,
   TrendingUp,
@@ -37,6 +38,15 @@ const features = [
     span: "",
     status: "Live",
     href: "/practice",
+  },
+  {
+    icon: Clapperboard,
+    title: "Short videos",
+    description:
+      "YouTube Shorts organized by topic — played inside DataArena, no redirect to YouTube.",
+    span: "",
+    status: "Live",
+    href: "/shorts",
   },
   {
     icon: Bot,

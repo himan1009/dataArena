@@ -9,6 +9,7 @@ import {
   Bot,
   Briefcase,
   Check,
+  Clapperboard,
   Code2,
 } from "lucide-react";
 
@@ -156,6 +157,13 @@ export function Hero({ user }: { user: AuthUser | null }) {
                       value: "Categories & topics",
                       tint: "primary" as const,
                       href: "/practice",
+                    },
+                    {
+                      icon: Clapperboard,
+                      label: "Shorts",
+                      value: "Embedded YouTube",
+                      tint: "teal" as const,
+                      href: "/shorts",
                     },
                     { icon: Bot, label: "AI Copilot", value: "Explain & debug", tint: "violet" as const },
                   ].map((item) => {
